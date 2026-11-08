@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지정책론 플래시카드</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* 눈이 편한 차분한 초록 계열 (index.html의 플래시카드 색과 맞춤) */
+    body {
+        font-family: 'Pretendard', sans-serif;
+        background: linear-gradient(135deg, #2f7d5b 0%, #1b4332 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .container { width: 100%; max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+    .header { text-align: center; color: white; margin-bottom: 20px; }
+    .header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+    .header .sub { font-size: 1.05rem; font-weight: 600; opacity: 0.92; margin-bottom: 10px; word-break: keep-all; }
+    .header .count { font-size: 1.1rem; font-weight: 700; }
+    .progress { max-width: 340px; height: 6px; margin: 12px auto 0; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+    #bar { height: 100%; width: 0; background: white; border-radius: 3px; transition: width 0.3s; }
+
+    /* 카드 */
+    .stage { perspective: 1400px; margin: 12px 0; }
+    .card {
+        position: relative;
+        width: 100%;
+        height: min(460px, 60vh);
+        height: min(460px, 60dvh);
+        min-height: 320px;
+        cursor: pointer;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card:focus-visible { outline: 3px solid #fde68a; outline-offset: 4px; }
+
+    .side {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 26px 18px;
+        border-radius: 20px;
+        overflow-y: auto;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        word-break: keep-all;
+        white-space: pre-line;
+    }
+    .front { background: white; color: #1e293b; }
+    .back { background: #f0f7f2; color: #1b4332; transform: rotateY(180deg); }
+
+    .meta { display: flex; align-items: center; justify-content: space-between; min-height: 28px; white-space: normal; }
+    .chip { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; }
+    .chip-q { background: #f1f5f9; color: #475569; }
+    .chip-a { background: #cfe8d8; color: #1b4332; }
+    .stars { font-size: 0.95rem; font-weight: 800; color: #1f6b46; background: #e3f1e8; padding: 3px 10px; border-radius: 20px; display: none; }
+
+    /* 내용이 길어도 위쪽이 잘리지 않도록 margin:auto로 가운데 맞춤 */
+    .body { margin: auto; padding: 14px 0; text-align: center; font-size: 1.4rem; font-weight: 700; line-height: 1.55; }
+    .back .body { font-size: 1.55rem; font-weight: 800; }
+    .src { min-height: 1.2em; text-align: center; font-size: 0.85rem; color: #64748b; white-space: normal; }
+
+    .tip { text-align: center; color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 4px 0 14px; word-break: keep-all; }
+
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; }
+    .btn { padding: 18px 10px; border: none; border-radius: 12px; background: white; color: #1f6b46; font-family: inherit; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn:hover { background: #f1f5f9; transform: translateY(-2px); }
+    .btn:focus-visible { outline: 3px solid #fde68a; outline-offset: 2px; }
+
+    /* 데이터 검사 결과 화면 */
+    .problem-card { display: none; background: white; border-radius: 15px; padding: 28px; border-left: 6px solid #dc3545; box-shadow: 0 10px 30px rgba(0,0,0,0.25); color: #1e293b; }
+    .problem-card h2 { margin: 0 0 8px; font-size: 1.3rem; }
+    .problem-card .summary { margin: 0 0 16px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    .problem-list { list-style: none; margin: 0 0 8px; padding: 0; }
+    .problem-list li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #e0e7f1; line-height: 1.5; word-break: keep-all; }
+    .problem-list .tag { flex: none; min-width: 3.2rem; font-weight: 800; color: #dc3545; }
+    .problem-card .tips { margin: 12px 0 0; padding: 14px; background: #f3f6fa; border-radius: 10px; font-size: 0.92rem; line-height: 1.6; color: #2f3640; word-break: keep-all; }
+    .problem-card .tips ul { margin: 6px 0 0; padding-left: 20px; }
+    #partial-btn { width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 10px; background: #2e7d5b; color: white; font-weight: bold; font-size: 1.05rem; cursor: pointer; font-family: inherit; }
+    #partial-btn:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+
+    @media (max-width: 600px) {
+        body { padding: 14px; }
+        .header h1 { font-size: 1.6rem; }
+        .side { padding: 16px 18px 14px; }
+        .body { font-size: 1.2rem; }
+        .back .body { font-size: 1.3rem; }
+        .controls { grid-template-columns: 1fr 1fr; }
+        .controls .btn-list { grid-column: 1 / -1; }
+        .btn { padding: 16px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .card, #bar, .btn { transition: none; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="problem-screen" class="problem-card" role="alert">
+        <h2 id="problem-title"></h2>
+        <p id="problem-summary" class="summary"></p>
+        <ul id="problem-list" class="problem-list"></ul>
+        <div id="problem-tips" class="tips"></div>
+        <button id="partial-btn" type="button"></button>
+    </div>
+
+    <div id="card-screen">
+        <div class="header">
+            <h1 id="page-title">플래시카드</h1>
+            <p class="sub" id="page-sub"></p>
+            <p class="count"><span id="current">1</span> / <span id="total">0</span></p>
+            <div class="progress"><div id="bar"></div></div>
+        </div>
+
+        <div class="stage">
+            <div class="card" id="flashcard" role="button" tabindex="0" aria-label="카드 뒤집기">
+                <div class="side front">
+                    <div class="meta"><span class="chip chip-q">질문</span><span class="stars" id="stars"></span></div>
+                    <div class="body" id="question"></div>
+                    <div class="src" id="source"></div>
+                </div>
+                <div class="side back">
+                    <div class="meta"><span class="chip chip-a">정답</span></div>
+                    <div class="body" id="answer"></div>
+                    <div class="src"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="tip">카드를 누르면 정답이 보여요. 화살표 키나 좌우로 밀어서 넘길 수 있어요.</p>
+
+        <div class="controls">
+            <button class="btn" type="button" onclick="prevCard()">이전</button>
+            <button class="btn" type="button" onclick="nextCard()">다음</button>
+            <button class="btn btn-list" type="button" onclick="location.href='index.html'">목록으로 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<!-- ① 오류 수집용: 반드시 맨 위(②, ③보다 앞)에 두세요. 수정하지 마세요. -->
+<script>
+    window.__dataErrors = [];
+    window.addEventListener('error', function (e) {
+        window.__dataErrors.push({ msg: e.message, line: e.lineno });
+    });
+</script>
+
+<!-- ② 장 설정: 새 장을 만들 때 번호와 제목만 고치세요. -->
+<script>
+    const LECTURE = { no: 14, title: "한국 사회복지정책의 역사, 현황과 쟁점" };
+</script>
+
+<!-- ③ 카드 데이터: 노트북LM이 만든 const cards = [...]; 를 통째로 덮어쓰세요.
+     아래 2장은 화면 확인용 예시입니다. 덮어쓸 때 이 예시도 같이 지우세요.
+     카드마다 q(질문)와 a(정답)가 모두 있어야 합니다. -->
+<script>
+    const cards = [
+        {"q": "★★★ 한국 복지국가를 형상화한 이념적 토대 4가지는? (사회민주주의 포함 여부) [교재 p.298, 워크북 p.158, 2018년 기말 기출]",
+    "a": "발전주의, 반공주의, 유교주의, 신자유주의이며, 사회민주주의는 포함되지 않습니다."
+  },
+  {
+    "q": "★★★ 1998년 외환위기 이후(김대중·노무현 정부) 공공복지 확장에도 불구하고 양극화와 불평등이 심화된 구조적 원인은? [교재 p.300, 워크북 p.152, 2015년, 2018년 기말 기출]",
+    "a": "안정적 정규직 노동자 위주로 사회보험이 확대되어 역진적 선별성이 심화되었고, 노동시장 유연화(비정규직화)가 겹쳤기 때문입니다."
+  },
+  {
+    "q": "★★★ 보수정부 9년(이명박·박근혜 정부)의 복지 재정 전략인 '확장성의 제약'이란? [교재 p.301, 워크북 p.153]",
+    "a": "신규 복지제도를 도입하면서도 중장기적으로 공공복지 재정이 일정 수준 이상 폭증하지 않도록 통제·억제 장치를 동시 입안하는 전략입니다."
+  },
+  {
+    "q": "★★★ 문재인 정부 복지 정책의 국정 슬로건과 주요 성과/한계는? [교재 p.302, 워크북 p.153]",
+    "a": "'혁신적 포용국가'를 표방하여 부양의무자 기준 완화 등을 추진했으나, 민간 영리 중심의 사회서비스 구조를 극복하지 못한 한계가 있습니다."
+  },
+  {
+    "q": "★★★ '한국 복지국가와 동정의 집' 모델에서 '가족의 집'과 '동정의 집'의 역할은? [교재 p.304, 워크북 p.154]",
+    "a": "'가족의 집'은 시장 탈락자를 1차적으로 짊어지는 사적 피난처이며, '동정의 집'은 자산과 가족이 없는 극빈층만을 국가가 사후 구호하는 잔여적 기둥입니다."
+  },
+  {
+    "q": "★★★ 생산주의 복지체제(Productivist Welfare Regime)의 정의는? [교재 p.304, 워크북 p.154]",
+    "a": "복지를 독립된 시민의 권리가 아닌, 경제성장과 생산성 향상을 촉진하기 위한 수단으로 활용하는 복지체제입니다."
+  },
+  {
+    "q": "★★★ 한국 사회에서 급부상한 '신사회적 위험(New Social Risks)'의 예시는? [교재 p.306, 워크북 p.155]",
+    "a": "플랫폼·비전형 노동 불안정, 돌봄 공백, 1인 가구 고립 및 고독사, 기후·환경 위험, 주거 불안정 등입니다."
+  },
+  {
+    "q": "★★★ 길버트와 테렐(Gilbert & Terrell)의 보편주의와 선별주의(잔여주의) 정의 차이는? [교재 p.309, 워크북 p.156]",
+    "a": "보편주의는 사회적 권리로서 모든 국민에게 제공하는 원리이고, 선별주의는 자산조사를 통해 욕구가 증명된 극빈층에만 제공하는 원리입니다."
+  },
+  {
+    "q": "★★★ '재분배의 도덕적 역설(Moral Paradox of Redistribution)'이란? [교재 p.310, 워크북 p.156]",
+    "a": "복지의존을 막으려고 자산조사를 엄격히 하는 선별주의 국가에서, 도리어 수급 자격 유지 유인 때문에 복지의존과 빈곤이 심해지는 현상입니다."
+  },
+  {
+    "q": "★★★ 사회복지 정책의 민영화(Privatization)에 대한 찬반 논쟁 핵심은? [교재 p.312, 워크북 p.159, 2016년, 2019년 기말 기출]",
+    "a": "찬성론은 비용 절감, 시장 자율, 관료주의 극복을 주장하고, 반대론은 형평성 훼손, 이윤 추구로 인한 가격 상승, 약자 배제를 지적합니다."
+  },
+  {
+    "q": "★★★ 의료 서비스 등 필수재의 민영화 시 '정보 비대칭성'이 가져오는 부작용은? [교재 p.314, 워크북 p.157]",
+    "a": "공급자(의사)와 소비자(환자) 간 정보 격차가 커서 대등한 시장 선택이 불가능하며, 생명이 구매력에 종속되는 문제가 발생합니다."
+  },
+  {
+    "q": "★★★ 영국의 국민보건서비스(NHS)와 미국 민영 의료보험의 효율성 비교 결과는? (영화 '식코') [교재 p.315, 2016년 기말 기출]",
+    "a": "조세 기반 공적 예방 의료인 영국 NHS가 민영보험 중심의 미국보다 훨씬 적은 총 의료비 지출로 효율적 보장을 이룹니다."
+  },
+  {
+    "q": "★★★ 2010년 무상급식 논쟁이 한국 복지 정치에 미친 영향은? [교재 p.311, 워크북 p.156]",
+    "a": "낙인감 없는 보편적 복지 혜택을 전 국민이 체험하고 연대하는 계기가 되어 보편주의 복지 논쟁의 이정표가 되었습니다."
+  },
+  {
+    "q": "★★★ 원조복지체제(1945~1961)의 핵심 구호 주체는? [교재 p.297, 워크북 p.151]",
+    "a": "국가 역할은 극히 제한적이었으며, 미국의 원조 물자와 민간 외원기관(KAVA) 중심의 사적 구호였습니다."
+  },
+  {
+    "q": "★★★ 개발국가 복지체제(1961~1997)에서 서구 복지국가의 '기능적 등가물' 역할을 한 것은? [교재 p.298, 워크북 p.151]",
+    "a": "경제성장에 따른 일자리 창출과 소득 증가입니다."
+  },
+  {
+    "q": "★★★ 1987년 민주화 이후(노태우·김영삼 정부) 공공복지 확장의 중심 대상은? [교재 p.299, 워크북 p.152]",
+    "a": "안정적 고용을 보장받는 정규직 대기업 노동자 중심의 사회보험과 사내 기업복지였습니다."
+  },
+  {
+    "q": "★★★ 티트머스(R. Titmuss)가 제시한 '선별주의'의 넓은 의미는? [교재 p.309, 워크북 p.156]",
+    "a": "단순 자산조사를 넘어, 욕구의 차이에 기초하여 특정 범주의 사람들을 수급자로 지정하는 원리입니다."
+  },
+  {
+    "q": "★★★ 긍정적 차별(Positive Discrimination, 적극적 조치)의 복지적 의의는? [교재 p.310, 워크북 p.156]",
+    "a": "보편주의 틀 안에서 욕구가 크거나 취약한 약자에게 자원을 우대 배분하여 실질적 기회와 결과의 평등을 완성하는 원리입니다."
+  },
+  {
+    "q": "★★★ 복지국가 정책 모델 중 가장 보편주의적인 국가군과 특징은? [교재 p.308, 워크북 p.155-156]",
+    "a": "북유럽 사회민주주의 복지국가로, 높은 탈상품화와 낮은 계층화, 거주 기반 보편 수당 및 사회서비스를 제공합니다."
+  },
+  {
+    "q": "★★★ 한국 사회복지정책의 역사적 전개 3단계 순서는? [교재 p.297-300, 워크북 p.151-152]",
+    "a": "원조복지체제(1945~1961) ➔ 개발국가 복지체제(1961~1997) ➔ 복지국가 체제로의 이행(1998~) 순입니다."
+  },
+  {
+    "q": "★★☆ 개발국가 복지체제 시대에 공공복지 공백을 메운 사적 영역의 대체 기제 2가지는? [교재 p.299-300, 워크북 p.152]",
+    "a": "가족 내부의 사적 부양과 부동산·저축 등 개인의 사적 자산 축적입니다."
+  },
+  {
+    "q": "★★☆ 1990년대 초 3저 호황 종료 후 대기업의 자동화 및 외주화가 가져온 폐단은? [교재 p.299, 워크북 p.152]",
+    "a": "소수 정규직 노동자만 포섭하고 외부 비정규직 노동자와의 노동시장 양극화를 심화시켰습니다."
+  },
+  {
+    "q": "★★☆ 김대중 정부가 1999년 제정(2000년 시행)하여 시민권에 기초한 최저생활을 보장한 법률은? [교재 p.300, 워크북 p.152]",
+    "a": "국민기초생활보장법입니다."
+  },
+  {
+    "q": "★★☆ 서구 보수정부의 복지 전략(체계적 축소)과 한국 보수정부 복지 전략(확장성의 제약)의 차이는? [교재 p.301, 워크북 p.153]",
+    "a": "서구는 성숙된 기존 복지의 미래 증가분을 억제·축소했고, 한국은 제도를 신설·확대하면서 미래 제약 장치를 동시에 넣었습니다."
+  },
+  {
+    "q": "★★☆ 한국의 인구·가구 구조 변화가 사회보장 지속가능성에 미치는 위협 3가지는? [교재 p.306, 워크북 p.155]",
+    "a": "초저출생과 고령화로 인한 부양비 폭증, 1인 가구 증가로 인한 돌봄 공백 및 고독사 위험 심화입니다."
+  },
+  {
+    "q": "★★☆ 민영화 찬성론자들이 주장하는 '정부 공급의 관료주의' 비판 요지는? [교재 p.312-313, 워크북 p.157]",
+    "a": "정부 전문가와 관료가 서비스를 독점 결정하므로, 소비자가 시장에서 직접 선택·결제하는 기제가 더 민주적이라는 주장입니다."
+  },
+  {
+    "q": "★★☆ 민영화 반대론자들이 지적하는 '비용 측면'의 반대 근거는? [교재 p.313, 워크북 p.157]",
+    "a": "민간 기업은 이윤(profit)을 남겨야 하고 마케팅·광고비가 가격에 추가되므로 최종 이용자 부담 비용이 더 커진다는 점입니다."
+  },
+  {
+    "q": "★★☆ 1980년대 대처즘과 레이거노믹스 등 신자유주의가 주창한 민영화의 이념적 근거는? [교재 p.312, 워크북 p.156]",
+    "a": "복지 지출을 비생산적 재정 부담으로 보고 정부 개입을 축소하여 시장 자율과 경쟁을 회복해야 한다는 신고전파 경제학 논리입니다."
+  },
+  {
+    "q": "★★☆ 노동 시장 및 기업 경영 형태 변화(외주화, 플랫폼 노동)가 복지제도에 주는 과제는? [교재 p.303-304, 워크북 p.154]",
+    "a": "과거 산업화 직접 고용에 맞춘 사회보험 틀을 넘어 비전형·플랫폼 노동자를 포섭하는 새로운 복지제도 재구성이 필요합니다."
+  },
+  {
+    "q": "★★☆ 한국에서 보편주의 할당원리를 완성하기 위해 사후 수당 외에 요구되는 사회적 노력은? [교재 p.311, 워크북 p.156]",
+    "a": "모든 시민에게 노동할 권리와 정당한 성취·참여 기회를 공적으로 보장하는 노력입니다."
+  },
+  {
+    "q": "★★☆ 한국의 복지 정책이 생산적 복지와 선별적 복지 기조를 오래 유지해 온 역사적 배경은? [교재 p.303, 워크북 p.154]",
+    "a": "1960년대 이후 경제성장이 복지를 대체했던 개발국가 복지체제의 유산으로, 복지를 성장의 보조 수단으로 보았기 때문입니다."
+  },
+  {
+    "q": "★★☆ 확장된 사회적 위험(돌봄, 고립, 주거 불안) 대응에 가장 효과적인 정책 수단은? [교재 p.307, 워크북 p.155]",
+    "a": "단순 현금 지원을 넘어 맞춤형 비물질적·관계적 사회서비스 제도입니다."
+  },
+  {
+    "q": "★★☆ 북유럽 보편주의 복지국가 모델의 2대 축은? [교재 p.308, 워크북 p.155]",
+    "a": "전 국민 대상 보편적 사회서비스 및 거주 기반 수당과 소득비례 사회보험의 결합 구조입니다."
+  },
+  {
+    "q": "★★☆ 중앙정부와 지방자치단체의 복지 역사적 기여 차이는? [교재 p.297-302]",
+    "a": "중앙정부는 법제 정비와 제도 확립을 주도했고, 지자체는 무상급식, 커뮤니티 케어 등 현장 보편 복지 실험을 선도했습니다."
+  },
+  {
+    "q": "★★☆ 영화 '식코(Sicko)'가 고발한 민영 건강보험 체계의 치명적 부작용은? [교재 p.315]",
+    "a": "무보험자의 수술 거부, 자가 치료, 민영 보험사의 이윤 추구로 인한 치료 거절과 사회적 양극화입니다."
+  },
+  {
+    "q": "★★☆ 한국 복지국가 미래 설계를 위해 요구되는 시민 사회의 자세는? [교재 p.305, 워크북 p.157-158]",
+    "a": "복지 정책을 이념의 설계도면으로 인식하고, 신사회적 위험에 대응하는 보편적 사회권과 공적 연대를 토론·공유하는 것입니다."
+  },
+  {
+    "q": "★★☆ 1998년 김대중 정부 출범과 함께 구성되어 노사정 복지 타협을 모색한 기구는? [교재 p.300]",
+    "a": "노사정위원회입니다."
+  },
+  {
+    "q": "★★☆ 기초생활보장제도에서 2015년 7월 도입되어 복지 사각지대를 완화한 개편 명칭은? [교재 p.301, 워크북 p.153]",
+    "a": "급여별 수급 기준을 다단계화한 맞춤형 개별급여 개편입니다."
+  },
+  {
+    "q": "★★☆ 민영화 반대론자들이 지적하는 '형평성(공평성) 손상'의 위협은? [교재 p.313-314, 워크북 p.157]",
+    "a": "구매력 없는 빈곤층이 필수 복지·의료 혜택에서 배제되어 계층 간 양극화와 사회정의 훼손이 극대화된다는 점입니다."
+  },
+  {
+    "q": "★★☆ 복지 지출이 비생산적 비용이 아니라 경제의 안정적 기반이 된다는 보편주의 측 주장은? [교재 p.309-310]",
+    "a": "사회적 안전망 구축을 통해 위험 감소, 소비 유지, 사회통합을 이루어 지속 가능한 성장을 돕는다는 주장입니다."
+  },
+  {
+    "q": "★☆☆ 국민기초생활보장법이 제정된 연도는? [교재 p.300, 2015년 기말 기출]",
+    "a": "1999년입니다. (2000년 10월 시행)"
+  },
+  {
+    "q": "★☆☆ 영국의 조세 기반 공적 무상의료 체계의 약자는? [교재 p.315, 2016년 기말 기출]",
+    "a": "NHS(National Health Service, 국민보건서비스)입니다."
+  },
+  {
+    "q": "★☆☆ 무상급식 논쟁이 전국적 선거 이슈로 부상했던 연도는? [교재 p.311]",
+    "a": "2010년 6.2 지방선거입니다."
+  },
+  {
+    "q": "★☆☆ 1945~1961년 한국 원조복지 시기에 활동했던 민간 외원기구 협의회 약자는? [교재 p.297]",
+    "a": "KAVA(한국외원부조단체협의회)입니다."
+  },
+  {
+    "q": "★☆☆ 국민연금제도가 10인 이상 사업장으로 최초 시행된 연도는? [교재 p.299]",
+    "a": "1988년입니다."
+  },
+  {
+    "q": "★☆☆ 고용보험제도가 최초 시행된 연도는? [교재 p.299]",
+    "a": "1995년입니다."
+  },
+  {
+    "q": "★☆☆ 노인장기요양보험이 본격 시행된 연도는? [교재 p.301]",
+    "a": "2008년입니다."
+  },
+  {
+    "q": "★☆☆ 기초연금제도가 도입 시행된 연도는? [교재 p.301]",
+    "a": "2014년입니다."
+  },
+  {
+    "q": "★☆☆ 문재인 정부가 포용적 복지국가를 실현하기 위해 선포한 핵심 국정 비전 명칭은? [교재 p.302]",
+    "a": "혁신적 포용국가입니다."
+  },
+  {
+    "q": "★☆☆ 한국 복지국가 발전의 최종 지향점으로 요구되는 복지 철학은? [교재 p.316]",
+    "a": "시민권에 기초한 보편적 복지국가와 공적 연대입니다."}
+    ];</script>
+
+<!-- ④ 프로그램 본체: 수정하지 마세요. -->
+<script>
+    var deck = [];
+    var cur = 0;
+    var swapTimer = null;
+
+    document.title = '제' + LECTURE.no + '장 - ' + LECTURE.title;
+    document.getElementById('page-title').textContent = '제' + LECTURE.no + '장 플래시카드';
+    document.getElementById('page-sub').textContent = LECTURE.title;
+
+    var cardEl = document.getElementById('flashcard');
+
+    function reduceMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    /* ---------- 데이터 검사 ---------- */
+    function validateCards(data) {
+        var errors = [];
+        var valid = [];
+
+        if (!Array.isArray(data) || data.length === 0) {
+            errors.push({ tag: '전체', text: 'cards가 비어 있거나 배열([ ])이 아닙니다.' });
+            return { errors: errors, valid: valid };
+        }
+
+        data.forEach(function (item, i) {
+            var tag = (i + 1) + '번 카드';
+            var problems = [];
+            if (!item || typeof item !== 'object') {
+                problems.push('카드가 { } 형식이 아닙니다.');
+            } else {
+                if (typeof item.q !== 'string' || !item.q.trim()) problems.push('q(질문)가 없거나 비어 있습니다.');
+                if (typeof item.a !== 'string' || !item.a.trim()) problems.push('a(정답)가 없거나 비어 있습니다.');
+            }
+            if (problems.length) {
+                problems.forEach(function (t) { errors.push({ tag: tag, text: t }); });
+            } else {
+                valid.push(item);
+            }
+        });
+
+        return { errors: errors, valid: valid };
+    }
+
+    function showProblemScreen(opts) {
+        document.getElementById('card-screen').style.display = 'none';
+        document.getElementById('problem-screen').style.display = 'block';
+        document.getElementById('problem-title').textContent = opts.title;
+        document.getElementById('problem-summary').textContent = opts.summary;
+
+        var list = document.getElementById('problem-list');
+        list.innerHTML = '';
+        opts.items.forEach(function (it) {
+            var li = document.createElement('li');
+            var tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = it.tag;
+            var txt = document.createElement('span');
+            txt.textContent = it.text;
+            li.appendChild(tag);
+            li.appendChild(txt);
+            list.appendChild(li);
+        });
+
+        var tips = document.getElementById('problem-tips');
+        tips.innerHTML = '';
+        if (opts.tips && opts.tips.length) {
+            tips.appendChild(document.createTextNode('자주 생기는 원인'));
+            var ul = document.createElement('ul');
+            opts.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                ul.appendChild(li);
+            });
+            tips.appendChild(ul);
+            tips.style.display = 'block';
+        } else {
+            tips.style.display = 'none';
+        }
+
+        var btn = document.getElementById('partial-btn');
+        if (opts.buttonText) {
+            btn.textContent = opts.buttonText;
+            btn.style.display = 'block';
+            btn.onclick = opts.onButton;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function startDeck(list) {
+        deck = list;
+        cur = 0;
+        document.getElementById('problem-screen').style.display = 'none';
+        document.getElementById('card-screen').style.display = 'block';
+        render();
+    }
+
+    function init() {
+        // 데이터 문법 오류: ③ 블록이 아예 실행되지 못한 경우
+        if (typeof cards === 'undefined') {
+            var items = window.__dataErrors.map(function (er) {
+                return { tag: er.line ? ('약 ' + er.line + '줄') : '오류', text: er.msg };
+            });
+            if (!items.length) items.push({ tag: '오류', text: 'cards를 찾을 수 없습니다. const cards = [ ... ]; 형태가 맞는지 확인하세요.' });
+            showProblemScreen({
+                title: '⚠️ 카드 데이터를 읽지 못했어요',
+                summary: '데이터 부분에 문법 오류가 있어서 프로그램이 멈췄습니다. 아래 줄 근처를 확인하세요.',
+                items: items,
+                tips: [
+                    '문장 안에 큰따옴표(")가 들어 있음 → 작은따옴표(\')로 바꾸기',
+                    '카드와 카드 사이 쉼표(,) 빠짐, 또는 맨 끝의 ]; 가 지워짐',
+                    '문장 한가운데에서 줄이 바뀜 (한 문장은 한 줄로)',
+                    '붙여넣은 글에 // 가 포함되어 뒷부분이 주석 처리됨'
+                ]
+            });
+            return;
+        }
+
+        var result = validateCards(cards);
+
+        if (result.errors.length === 0) {
+            startDeck(result.valid);
+            return;
+        }
+
+        var total = Array.isArray(cards) ? cards.length : 0;
+        var badCount = total - result.valid.length;
+        showProblemScreen({
+            title: '⚠️ 고칠 곳이 ' + result.errors.length + '군데 있어요',
+            summary: badCount > 0
+                ? '전체 ' + total + '장 중 ' + badCount + '장에 문제가 있습니다. 데이터를 고치고 새로고침하세요.'
+                : '카드 데이터를 확인하고 새로고침하세요.',
+            items: result.errors,
+            tips: ['카드마다 q(질문)와 a(정답)가 모두 있어야 하고, 둘 다 글자(따옴표로 감싼 문장)여야 합니다'],
+            buttonText: result.valid.length > 0 ? '오류 없는 ' + result.valid.length + '장만 먼저 보기' : null,
+            onButton: function () { startDeck(result.valid); }
+        });
+    }
+
+    /* ---------- 카드 표시 ---------- */
+    // 질문 앞의 ★(중요도)와 끝의 [출처]를 따로 떼어 작은 표식으로 보여줍니다.
+    function parseQuestion(raw) {
+        var text = raw.trim();
+        var stars = '';
+        var src = '';
+        var m = text.match(/^([★☆]{1,5})\s*/);
+        if (m) { stars = m[1]; text = text.slice(m[0].length); }
+        var s = text.match(/\s*\[([^\]]{1,40})\]\s*$/);
+        if (s) { src = s[1]; text = text.slice(0, s.index); }
+        if (!text.trim()) { text = raw.trim(); stars = ''; src = ''; }
+        return { stars: stars, src: src, text: text };
+    }
+
+    function render() {
+        var c = deck[cur];
+        var p = parseQuestion(c.q);
+
+        document.getElementById('question').textContent = p.text;
+        document.getElementById('answer').textContent = c.a.trim();
+        document.getElementById('source').textContent = p.src ? '출처: ' + p.src : '';
+
+        var starsEl = document.getElementById('stars');
+        if (p.stars) {
+            var filled = (p.stars.match(/★/g) || []).length;
+            starsEl.textContent = p.stars;
+            starsEl.setAttribute('aria-label', '중요도 ' + p.stars.length + '개 중 ' + filled + '개');
+            starsEl.style.display = 'inline-block';
+        } else {
+            starsEl.style.display = 'none';
+        }
+
+        document.getElementById('current').textContent = cur + 1;
+        document.getElementById('total').textContent = deck.length;
+        document.getElementById('bar').style.width = ((cur + 1) / deck.length * 100) + '%';
+    }
+
+    function flip() { cardEl.classList.toggle('flipped'); }
+
+    function go(delta) {
+        cur = (cur + delta + deck.length) % deck.length;
+        clearTimeout(swapTimer);
+        if (cardEl.classList.contains('flipped') && !reduceMotion()) {
+            // 먼저 카드를 앞면으로 돌리고, 옆면이 되어 안 보일 때 내용을 바꿔서 다음 정답이 미리 비치지 않게 함
+            cardEl.classList.remove('flipped');
+            swapTimer = setTimeout(render, 300);
+        } else {
+            cardEl.classList.remove('flipped');
+            render();
+        }
+    }
+    function nextCard() { go(1); }
+    function prevCard() { go(-1); }
+
+    cardEl.addEventListener('click', flip);
+
+    document.addEventListener('keydown', function (e) {
+        if (document.getElementById('card-screen').style.display === 'none') return;
+        if (e.key === 'ArrowRight') { nextCard(); }
+        else if (e.key === 'ArrowLeft') { prevCard(); }
+        else if ((e.key === ' ' || e.key === 'Enter') && e.target.tagName !== 'BUTTON') { e.preventDefault(); flip(); }
+    });
+
+    // 스마트폰: 좌우로 밀어서 넘기기
+    var touchX = null, touchY = null;
+    cardEl.addEventListener('touchstart', function (e) {
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+    }, { passive: true });
+    cardEl.addEventListener('touchend', function (e) {
+        if (touchX === null) return;
+        var dx = e.changedTouches[0].clientX - touchX;
+        var dy = e.changedTouches[0].clientY - touchY;
+        touchX = null;
+        if (Math.abs(dx) > 60 && Math.abs(dy) < 50) {
+            if (dx < 0) nextCard(); else prevCard();
+        }
+    }, { passive: true });
+
+    init();
+</script>
+</body>
+</html>

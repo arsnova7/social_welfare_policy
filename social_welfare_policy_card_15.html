@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지정책론 플래시카드</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* 눈이 편한 차분한 초록 계열 (index.html의 플래시카드 색과 맞춤) */
+    body {
+        font-family: 'Pretendard', sans-serif;
+        background: linear-gradient(135deg, #2f7d5b 0%, #1b4332 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .container { width: 100%; max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+    .header { text-align: center; color: white; margin-bottom: 20px; }
+    .header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+    .header .sub { font-size: 1.05rem; font-weight: 600; opacity: 0.92; margin-bottom: 10px; word-break: keep-all; }
+    .header .count { font-size: 1.1rem; font-weight: 700; }
+    .progress { max-width: 340px; height: 6px; margin: 12px auto 0; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+    #bar { height: 100%; width: 0; background: white; border-radius: 3px; transition: width 0.3s; }
+
+    /* 카드 */
+    .stage { perspective: 1400px; margin: 12px 0; }
+    .card {
+        position: relative;
+        width: 100%;
+        height: min(460px, 60vh);
+        height: min(460px, 60dvh);
+        min-height: 320px;
+        cursor: pointer;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card:focus-visible { outline: 3px solid #fde68a; outline-offset: 4px; }
+
+    .side {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 26px 18px;
+        border-radius: 20px;
+        overflow-y: auto;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        word-break: keep-all;
+        white-space: pre-line;
+    }
+    .front { background: white; color: #1e293b; }
+    .back { background: #f0f7f2; color: #1b4332; transform: rotateY(180deg); }
+
+    .meta { display: flex; align-items: center; justify-content: space-between; min-height: 28px; white-space: normal; }
+    .chip { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; }
+    .chip-q { background: #f1f5f9; color: #475569; }
+    .chip-a { background: #cfe8d8; color: #1b4332; }
+    .stars { font-size: 0.95rem; font-weight: 800; color: #1f6b46; background: #e3f1e8; padding: 3px 10px; border-radius: 20px; display: none; }
+
+    /* 내용이 길어도 위쪽이 잘리지 않도록 margin:auto로 가운데 맞춤 */
+    .body { margin: auto; padding: 14px 0; text-align: center; font-size: 1.4rem; font-weight: 700; line-height: 1.55; }
+    .back .body { font-size: 1.55rem; font-weight: 800; }
+    .src { min-height: 1.2em; text-align: center; font-size: 0.85rem; color: #64748b; white-space: normal; }
+
+    .tip { text-align: center; color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 4px 0 14px; word-break: keep-all; }
+
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; }
+    .btn { padding: 18px 10px; border: none; border-radius: 12px; background: white; color: #1f6b46; font-family: inherit; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn:hover { background: #f1f5f9; transform: translateY(-2px); }
+    .btn:focus-visible { outline: 3px solid #fde68a; outline-offset: 2px; }
+
+    /* 데이터 검사 결과 화면 */
+    .problem-card { display: none; background: white; border-radius: 15px; padding: 28px; border-left: 6px solid #dc3545; box-shadow: 0 10px 30px rgba(0,0,0,0.25); color: #1e293b; }
+    .problem-card h2 { margin: 0 0 8px; font-size: 1.3rem; }
+    .problem-card .summary { margin: 0 0 16px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    .problem-list { list-style: none; margin: 0 0 8px; padding: 0; }
+    .problem-list li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #e0e7f1; line-height: 1.5; word-break: keep-all; }
+    .problem-list .tag { flex: none; min-width: 3.2rem; font-weight: 800; color: #dc3545; }
+    .problem-card .tips { margin: 12px 0 0; padding: 14px; background: #f3f6fa; border-radius: 10px; font-size: 0.92rem; line-height: 1.6; color: #2f3640; word-break: keep-all; }
+    .problem-card .tips ul { margin: 6px 0 0; padding-left: 20px; }
+    #partial-btn { width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 10px; background: #2e7d5b; color: white; font-weight: bold; font-size: 1.05rem; cursor: pointer; font-family: inherit; }
+    #partial-btn:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+
+    @media (max-width: 600px) {
+        body { padding: 14px; }
+        .header h1 { font-size: 1.6rem; }
+        .side { padding: 16px 18px 14px; }
+        .body { font-size: 1.2rem; }
+        .back .body { font-size: 1.3rem; }
+        .controls { grid-template-columns: 1fr 1fr; }
+        .controls .btn-list { grid-column: 1 / -1; }
+        .btn { padding: 16px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .card, #bar, .btn { transition: none; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="problem-screen" class="problem-card" role="alert">
+        <h2 id="problem-title"></h2>
+        <p id="problem-summary" class="summary"></p>
+        <ul id="problem-list" class="problem-list"></ul>
+        <div id="problem-tips" class="tips"></div>
+        <button id="partial-btn" type="button"></button>
+    </div>
+
+    <div id="card-screen">
+        <div class="header">
+            <h1 id="page-title">플래시카드</h1>
+            <p class="sub" id="page-sub"></p>
+            <p class="count"><span id="current">1</span> / <span id="total">0</span></p>
+            <div class="progress"><div id="bar"></div></div>
+        </div>
+
+        <div class="stage">
+            <div class="card" id="flashcard" role="button" tabindex="0" aria-label="카드 뒤집기">
+                <div class="side front">
+                    <div class="meta"><span class="chip chip-q">질문</span><span class="stars" id="stars"></span></div>
+                    <div class="body" id="question"></div>
+                    <div class="src" id="source"></div>
+                </div>
+                <div class="side back">
+                    <div class="meta"><span class="chip chip-a">정답</span></div>
+                    <div class="body" id="answer"></div>
+                    <div class="src"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="tip">카드를 누르면 정답이 보여요. 화살표 키나 좌우로 밀어서 넘길 수 있어요.</p>
+
+        <div class="controls">
+            <button class="btn" type="button" onclick="prevCard()">이전</button>
+            <button class="btn" type="button" onclick="nextCard()">다음</button>
+            <button class="btn btn-list" type="button" onclick="location.href='index.html'">목록으로 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<!-- ① 오류 수집용: 반드시 맨 위(②, ③보다 앞)에 두세요. 수정하지 마세요. -->
+<script>
+    window.__dataErrors = [];
+    window.addEventListener('error', function (e) {
+        window.__dataErrors.push({ msg: e.message, line: e.lineno });
+    });
+</script>
+
+<!-- ② 장 설정: 새 장을 만들 때 번호와 제목만 고치세요. -->
+<script>
+    const LECTURE = { no: 15, title: "사회복지정책 실천과 사회운동" };
+</script>
+
+<!-- ③ 카드 데이터: 노트북LM이 만든 const cards = [...]; 를 통째로 덮어쓰세요.
+     아래 2장은 화면 확인용 예시입니다. 덮어쓸 때 이 예시도 같이 지우세요.
+     카드마다 q(질문)와 a(정답)가 모두 있어야 합니다. -->
+<script>
+    const cards = [
+        {"q": "★★★ 사회복지운동의 정의와 핵심 요소는? [교재 p.322, 워크북 p.160, 2014년, 2017년 기말 기출]",
+    "a": "민간이 사회복지정책의 방향과 내용에 특정한 견해(철학)를 가지고 이를 관철시키기 위해 수행하는 방향성 있는 사회적 실천입니다."
+  },
+  {
+    "q": "★★★ 프락시스(Praxis)의 의미와 사회복지사에게 요구되는 태도는? [교재 p.336, 워크북 p.166, 2016년, 2017년 기말 기출]",
+    "a": "단순 기계적 행정 집행을 넘어, 가치와 의미를 끊임없이 물으며 현장에서 행동하고 개혁하는 비판적 실천입니다."
+  },
+  {
+    "q": "★★★ 프락시스형 사회복지사를 상징하는 '마리다'의 개념은? [교재 p.336, 2016년, 2017년 기말 기출]",
+    "a": "현장에서 조직·행동하는 '마르다'와 가치와 의미를 끊임없이 탐구하는 '마리아'를 결합한 주체적 실천가 상입니다."
+  },
+  {
+    "q": "★★★ 세계 최초의 인보관인 '토인비 홀(Toynbee Hall)'의 역사적 의의는? [교재 p.336, 워크북 p.166, 2015년, 2018년 기말 기출]",
+    "a": "1884년 영국 런던 빈민가에 설립되어 대학생·지식인이 상주하며 주민 자조 조직화, 교육, 정책 입안을 이끈 실천 현장의 원형입니다."
+  },
+  {
+    "q": "★★★ 자선조직협회(COS)의 '우애방문단'과 인보관(토인비 홀)의 접근 방식 차이는? [교재 p.336, 워크북 p.166, 2014년, 2018년 기말 기출]",
+    "a": "COS는 빈곤을 개인의 나태로 보고 시혜와 계도를 준 반면, 인보관은 지역에 상주하며 주민 주체 형성과 환경 개혁을 도왔습니다."
+  },
+  {
+    "q": "★★★ 영국의 베버리지 보고서가 전쟁 중 대중적 지지를 받고 실현될 수 있었던 동력은? [교재 p.335, 워크북 p.165, 2017년, 2018년 기말 기출]",
+    "a": "시민들이 방공호 등에서 보고서를 읽고 토론하며 개인 책임에서 국가의 사회적 책임으로 대중적 철학 전환을 이끌어냈기 때문입니다."
+  },
+  {
+    "q": "★★★ 토인비 홀 사회복지사 출신으로 노동당 총리가 되어 베버리지 보고서를 입법화한 인물은? [교재 p.336, 워크북 p.167, 2017년 기말 기출]",
+    "a": "클레멘트 애틀리(C. R. Attlee) 총리입니다."
+  },
+  {
+    "q": "★★★ 마이클 왈저(M. Walzer)가 제시한 '비판적 거리(critical distance)'의 참뜻은? [교재 p.337, 워크북 p.167]",
+    "a": "내가 속한 사회를 등지는 것이 아니라, 불의한 권력, 권위, 지배 구조로부터 독립된 비판적 시각을 유지하는 태도입니다."
+  },
+  {
+    "q": "★★★ 아리스토텔레스의 '인간은 정치적 동물이다'가 복지정책에 주는 시사점은? [교재 p.339, 워크북 p.168]",
+    "a": "인간은 공동체의 공적 현안에 주체적으로 소통하고 참여하여 권리를 조정하고 관계를 맺어가는 존재라는 의미입니다."
+  },
+  {
+    "q": "★★★ 사회복지 정책 평론에서 '정책 평론의 눈'과 '중심성(Centrality)'의 의미는? [교재 p.337, 워크북 p.167-168]",
+    "a": "제도 이면의 이념과 세력을 읽어내며, 특정 기득권이 아닌 '사회 전체와 공동체, 우리'의 시각에서 정책을 평가하는 것입니다."
+  },
+  {
+    "q": "★★★ 마샬(T. H. Marshall)의 시민권 3단계 중 '사회권(Social Rights)'의 본질은? [교재 p.323, 워크북 p.161]",
+    "a": "자유권, 정치권을 넘어 자본주의 시장에서 탈상품화된 최저생활과 존엄을 요구할 수 있는 복지국가의 핵심 권리입니다."
+  },
+  {
+    "q": "★★★ 서유럽과 한국 사회복지운동의 주체적 역사 차이는? [교재 p.325, 워크북 p.162]",
+    "a": "서유럽은 강력한 산별 노동조합과 노동당이 주도했으나, 한국은 1990년대 이후 시민운동(참여연대 등)과 노동운동이 결합하여 발전했습니다."
+  },
+  {
+    "q": "★★★ 사회복지 급여와 서비스가 노동자에게 갖는 '사회적 임금(Social Wage)'의 의미는? [교재 p.325, 워크북 p.162]",
+    "a": "노동자가 시장에서 받는 월급(시장임금)의 한계를 보완하여 실질 소득과 삶의 안정을 높여주는 국가의 제2의 임금입니다."
+  },
+  {
+    "q": "★★★ 1990년대 후반 국민기초생활보장법 제정 등 복지 개혁을 주도한 대표적 시민단체는? [교재 p.326, 워크북 p.163]",
+    "a": "참여연대(사회복지위원회) 및 경실련 등입니다."
+  },
+  {
+    "q": "★★★ 2000년대 이후 등장하여 '보편적 복지국가 건설'을 전담 목표로 내건 대표적 운동 단체는? [교재 p.326, 워크북 p.163]",
+    "a": "'복지국가 소사이어티', '내가 만드는 복지국가' 등입니다."
+  },
+  {
+    "q": "★★★ 2010년대 청년 세대의 주거·일자리·복지권을 대변하며 출범한 세대운동 단체들은? [교재 p.329, 워크북 p.163]",
+    "a": "청년유니온, 민달팽이유니온, 알바노조, 복지국가청년네트워크 등입니다."
+  },
+  {
+    "q": "★★★ 현장 사회복지사들이 주체가 되어 출범한 대표적 복지종사자 운동 조직은? [교재 p.331, 워크북 p.164]",
+    "a": "세상을 바꾸는 사회복지사(세바시), 서울복지시민연대, 부산사회복지연대 등입니다."
+  },
+  {
+    "q": "★★★ 돌봄 노동자 노동조합(사회서비스 노조)이 추구하는 2대 핵심 연대 가치는? [교재 p.331, 워크북 p.164-165]",
+    "a": "돌봄 노동자의 노동조건 및 처우 개선과 돌봄 서비스의 공공성 강화입니다."
+  },
+  {
+    "q": "★★★ 2010년 무상급식 논쟁 이후 복지정치에 나타난 긍정적 효과와 한계는? [교재 p.324, 워크북 p.161-162]",
+    "a": "보편 복지 담론의 대중화라는 성과가 있었으나, 정당 간 표심 잡기 경쟁으로 흐르며 시민이 수동적 수혜자로 주변화될 위험을 보였습니다."
+  },
+  {
+    "q": "★★★ 한국 사회복지운동이 낮은 대중성과 조직률 한계를 극복하기 위해 취한 실천 방식은? [교재 p.334, 워크북 p.165]",
+    "a": "이슈별 연대체 형성(예: 공적연금강화국민행동, 사회서비스 시장화 저지 공대위 등)입니다."
+  },
+  {
+    "q": "★★☆ 사회복지 철학의 가장 근본적인 첫 번째 질문은? [교재 p.333, 워크북 p.164]",
+    "a": "빈곤과 위험의 원인이 개인에게 있는가, 아니면 사회적 구조에 있는가라는 질문입니다."
+  },
+  {
+    "q": "★★☆ 한국 사회복지 정책 결정이 역사적으로 보여온 방식과 한계는? [교재 p.323, 워크북 p.160-161]",
+    "a": "행정부 관료와 전문가 주도의 하향식(Top-down) 관치 복지여서 시민이 수동적 수혜자에 머물렀다는 한계가 있습니다."
+  },
+  {
+    "q": "★★☆ 사회복지정책 실천의 4대 핵심 운동 주체는? [교재 p.325-331, 2014년 기말 기출]",
+    "a": "노동운동, 시민운동, 세대운동, 사회복지 종사자운동 4가지입니다."
+  },
+  {
+    "q": "★★☆ 사회복지 종사자가 단순 행정 집행자를 넘어 '정치적 주체'여야 하는 이유는? [교재 p.335, 워크북 p.166]",
+    "a": "사회복지는 자원 배분과 사회적 권리를 다루는 정치적 행위이자 가치의 재분배이기 때문입니다."
+  },
+  {
+    "q": "★★☆ 청소년 기후복지 운동이 가지는 신사회운동적 성격은? [교재 p.330]",
+    "a": "청소년들이 수동적 보호 대상을 넘어 위험의 당사자이자 주체로서 미래의 안전과 기후 정의를 권리로 요구하는 것입니다."
+  },
+  {
+    "q": "★★☆ 자본주의 사회에서 복지정치가 해결하려는 2가지 목표와 기제는? [교재 p.323, 워크북 p.161]",
+    "a": "탈상품화를 통한 절대적 빈곤 해소와 계층화 완화(소득재분배)를 통한 상대적 불평등 완화입니다."
+  },
+  {
+    "q": "★★☆ 서울복지시민연대(2007년 출범)의 주요 복지 실천 사례는? [교재 p.332, 워크북 p.164]",
+    "a": "서울시민복지기준 발표 참여, 어린이 병원비 무료, 부양의무자 기준 폐지 및 공공성 확보 운동 등입니다."
+  },
+  {
+    "q": "★★☆ 베버리지가 '베버리지 보고서'라는 대작을 완성할 수 있었던 현장 바탕은? [교재 p.336, 워크북 p.166]",
+    "a": "토인비 홀 부관장으로 활동하며 현장에서 민중의 빈곤과 결핍 실태를 경험했기 때문입니다."
+  },
+  {
+    "q": "★★☆ 사회복지운동에서 장애인, 빈민, 돌봄노동자 등 '당사자 운동'의 의의는? [교재 p.323, 워크북 p.161]",
+    "a": "시혜 대상에서 벗어나 스스로의 존엄과 권리를 위해 정책 형성과 집행의 주체로 나서는 복지 민주주의의 진전입니다."
+  },
+  {
+    "q": "★★☆ 한국 사회복지운동이 향후 추진해야 할 3대 과제는? [교재 p.334, 워크북 p.165]",
+    "a": "일상적 복지 이슈 개발을 통한 대중 기반 확대, 정당정치와의 연계, 종사자 노조와의 연대 확장입니다."
+  },
+  {
+    "q": "★★☆ 정책 평론에서 단순 제도 비평을 넘어선 실천적 성격이란? [교재 p.339, 워크북 p.168]",
+    "a": "제도 이면의 이념, 세력 지형, 배분 효과를 바르게 읽고 비판적 개입을 통해 세상을 바꿔나가는 실천입니다."
+  },
+  {
+    "q": "★★☆ 자유권과 정치권 확립 후에도 '사회권'이 필연적으로 요구된 역사적 이유는? [교재 p.323, 워크북 p.161]",
+    "a": "자유와 투표권이 주어져도 생계와 실직 위험에 직면하면 실질적 인권과 존엄이 보장되지 않기 때문입니다."
+  },
+  {
+    "q": "★★☆ 베버리지 보고서가 영국 시민들에게 준 대중 철학의 변화는? [교재 p.335, 워크북 p.165]",
+    "a": "전시 배급을 거치며 '평등하니 더 건강해졌다'는 경험을 통해 개인 책임론에서 국가·사회적 연대 책임론으로 전환되었습니다."
+  },
+  {
+    "q": "★★☆ 정책 평론(비평)의 본질은 단순 비난과 어떻게 다른가? [교재 p.336-337, 워크북 p.167]",
+    "a": "단순 비난이 아닌, 사회를 올바르게 해석하고 그 평가를 통해 직접 개입하여 세상을 개혁하는 실천적 행위입니다."
+  },
+  {
+    "q": "★★☆ 한국 사회복지운동에서 풀뿌리 지역 시민운동이 증대한 제도적 배경은? [교재 p.327, 워크북 p.163]",
+    "a": "지방자치제 정착과 복지 권한의 지자체 이양으로 지역 맞춤형 복지 조례 및 예산 개혁이 중요해졌기 때문입니다."
+  },
+  {
+    "q": "★★☆ 사회복지사의 프락시스(Praxis)적 현장 실천 태도는? [교재 p.336, 워크북 p.166]",
+    "a": "제도 이면의 가치와 철학을 물으며(마리아), 클라이언트를 교육·조직하고 대안을 만드는(마르다) 태도입니다."
+  },
+  {
+    "q": "★★☆ 한국 당사자 복지운동의 역동적 발전 사례는? [교재 p.323, 워크북 p.160, 2013년 기말 기출]",
+    "a": "장애인 이동권 및 자립생활(IL) 운동, 빈민 운동, 보육·요양 노동자 운동 등이 왕성하게 전개되어 왔습니다."
+  },
+  {
+    "q": "★★☆ 사회복지 정책 실천에서 '사회복지 철학'이 부재할 때 발생하는 폐단은? [교재 p.333, 워크북 p.164]",
+    "a": "복지 정책이 중심을 잃고 정치 세력의 득표 도구나 일회성·이벤트성 행정 사업으로 전락하게 됩니다."
+  },
+  {
+    "q": "★★☆ 사회복지사와 종사자가 정당 및 입법 과정에 참여해야 하는 당위성은? [교재 p.335, 워크북 p.166]",
+    "a": "복지정책은 권력과 예산 배분을 결정하는 세력관계의 산물이므로, 현장과 수급자의 목소리가 반영되도록 정치적으로 개입해야 합니다."
+  },
+  {
+    "q": "★★☆ 세대운동(청년, 노인 등)이 복지운동에 기여하는 차별적 의의는? [교재 p.329, 워크북 p.163]",
+    "a": "세대적 위험과 당사자성을 지닌 넓은 집단을 지지 기반으로 삼아 알바 노동, 주거, 노후 등 특화된 이슈를 주도하는 점입니다."
+  },
+  {
+    "q": "★☆☆ 세계 최초의 인보관 토인비 홀이 설립된 연도는? [교재 p.336]",
+    "a": "1884년입니다."
+  },
+  {
+    "q": "★☆☆ 마샬이 밝힌 시민권 3단계의 세기별 전개 순서는? [교재 p.323]",
+    "a": "18세기 자유권 ➔ 19세기 정치권 ➔ 20세기 사회권 순입니다."
+  },
+  {
+    "q": "★☆☆ 참여연대 사회복지위원회가 주도하여 1999년 제정시킨 법률은? [교재 p.326]",
+    "a": "국민기초생활보장법입니다."
+  },
+  {
+    "q": "★☆☆ 현장 사회복지사들의 운동 조직 '세상을 바꾸는 사회복지사'의 출범 연도는? [교재 p.331]",
+    "a": "2012년입니다."
+  },
+  {
+    "q": "★☆☆ 무상급식 논쟁이 전국적 선거 이슈로 부상했던 연도는? [교재 p.324]",
+    "a": "2010년 6.2 지방선거입니다."
+  },
+  {
+    "q": "★☆☆ 스웨덴 시민들이 공부하고 토론하며 복지국가 주체로 성장한 소모임 체제는? [교재 p.335, 강의록 15강]",
+    "a": "책동아리(Study Circle) 민주주의입니다."
+  },
+  {
+    "q": "★☆☆ 정책 평론의 눈이 던지는 핵심 분석 질문 3가지는? [교재 p.339, 워크북 p.168]",
+    "a": "① 숨겨진 철학과 이념, ② 제도를 만든 세력관계, ③ 제도의 실제 배분 효과(누구에게 유리한가)입니다."
+  },
+  {
+    "q": "★☆☆ 현장 사회복지 종사자 운동 조직 '세상을 바꾸는 사회복지사'의 줄임말 약칭은? [교재 p.331]",
+    "a": "세바시(sebasa.org)입니다."
+  },
+  {
+    "q": "★☆☆ 윌리엄 베버리지가 인보관 토인비 홀에서 맡았던 직책은? [교재 p.336]",
+    "a": "부관장(Sub-warden)입니다."
+  },
+  {
+    "q": "★☆☆ 사회복지정책론 전체 강좌가 전달하는 사회복지정책의 참된 본질은? [교재 p.339, 워크북 p.168]",
+    "a": "더 나은 삶과 평등의 상상을 설계도면으로 구체화하고, 자각한 시민과 사회복지사가 연대하여 일상으로 완성해 가는 공적 개혁입니다."}
+    ];</script>
+
+<!-- ④ 프로그램 본체: 수정하지 마세요. -->
+<script>
+    var deck = [];
+    var cur = 0;
+    var swapTimer = null;
+
+    document.title = '제' + LECTURE.no + '장 - ' + LECTURE.title;
+    document.getElementById('page-title').textContent = '제' + LECTURE.no + '장 플래시카드';
+    document.getElementById('page-sub').textContent = LECTURE.title;
+
+    var cardEl = document.getElementById('flashcard');
+
+    function reduceMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    /* ---------- 데이터 검사 ---------- */
+    function validateCards(data) {
+        var errors = [];
+        var valid = [];
+
+        if (!Array.isArray(data) || data.length === 0) {
+            errors.push({ tag: '전체', text: 'cards가 비어 있거나 배열([ ])이 아닙니다.' });
+            return { errors: errors, valid: valid };
+        }
+
+        data.forEach(function (item, i) {
+            var tag = (i + 1) + '번 카드';
+            var problems = [];
+            if (!item || typeof item !== 'object') {
+                problems.push('카드가 { } 형식이 아닙니다.');
+            } else {
+                if (typeof item.q !== 'string' || !item.q.trim()) problems.push('q(질문)가 없거나 비어 있습니다.');
+                if (typeof item.a !== 'string' || !item.a.trim()) problems.push('a(정답)가 없거나 비어 있습니다.');
+            }
+            if (problems.length) {
+                problems.forEach(function (t) { errors.push({ tag: tag, text: t }); });
+            } else {
+                valid.push(item);
+            }
+        });
+
+        return { errors: errors, valid: valid };
+    }
+
+    function showProblemScreen(opts) {
+        document.getElementById('card-screen').style.display = 'none';
+        document.getElementById('problem-screen').style.display = 'block';
+        document.getElementById('problem-title').textContent = opts.title;
+        document.getElementById('problem-summary').textContent = opts.summary;
+
+        var list = document.getElementById('problem-list');
+        list.innerHTML = '';
+        opts.items.forEach(function (it) {
+            var li = document.createElement('li');
+            var tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = it.tag;
+            var txt = document.createElement('span');
+            txt.textContent = it.text;
+            li.appendChild(tag);
+            li.appendChild(txt);
+            list.appendChild(li);
+        });
+
+        var tips = document.getElementById('problem-tips');
+        tips.innerHTML = '';
+        if (opts.tips && opts.tips.length) {
+            tips.appendChild(document.createTextNode('자주 생기는 원인'));
+            var ul = document.createElement('ul');
+            opts.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                ul.appendChild(li);
+            });
+            tips.appendChild(ul);
+            tips.style.display = 'block';
+        } else {
+            tips.style.display = 'none';
+        }
+
+        var btn = document.getElementById('partial-btn');
+        if (opts.buttonText) {
+            btn.textContent = opts.buttonText;
+            btn.style.display = 'block';
+            btn.onclick = opts.onButton;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function startDeck(list) {
+        deck = list;
+        cur = 0;
+        document.getElementById('problem-screen').style.display = 'none';
+        document.getElementById('card-screen').style.display = 'block';
+        render();
+    }
+
+    function init() {
+        // 데이터 문법 오류: ③ 블록이 아예 실행되지 못한 경우
+        if (typeof cards === 'undefined') {
+            var items = window.__dataErrors.map(function (er) {
+                return { tag: er.line ? ('약 ' + er.line + '줄') : '오류', text: er.msg };
+            });
+            if (!items.length) items.push({ tag: '오류', text: 'cards를 찾을 수 없습니다. const cards = [ ... ]; 형태가 맞는지 확인하세요.' });
+            showProblemScreen({
+                title: '⚠️ 카드 데이터를 읽지 못했어요',
+                summary: '데이터 부분에 문법 오류가 있어서 프로그램이 멈췄습니다. 아래 줄 근처를 확인하세요.',
+                items: items,
+                tips: [
+                    '문장 안에 큰따옴표(")가 들어 있음 → 작은따옴표(\')로 바꾸기',
+                    '카드와 카드 사이 쉼표(,) 빠짐, 또는 맨 끝의 ]; 가 지워짐',
+                    '문장 한가운데에서 줄이 바뀜 (한 문장은 한 줄로)',
+                    '붙여넣은 글에 // 가 포함되어 뒷부분이 주석 처리됨'
+                ]
+            });
+            return;
+        }
+
+        var result = validateCards(cards);
+
+        if (result.errors.length === 0) {
+            startDeck(result.valid);
+            return;
+        }
+
+        var total = Array.isArray(cards) ? cards.length : 0;
+        var badCount = total - result.valid.length;
+        showProblemScreen({
+            title: '⚠️ 고칠 곳이 ' + result.errors.length + '군데 있어요',
+            summary: badCount > 0
+                ? '전체 ' + total + '장 중 ' + badCount + '장에 문제가 있습니다. 데이터를 고치고 새로고침하세요.'
+                : '카드 데이터를 확인하고 새로고침하세요.',
+            items: result.errors,
+            tips: ['카드마다 q(질문)와 a(정답)가 모두 있어야 하고, 둘 다 글자(따옴표로 감싼 문장)여야 합니다'],
+            buttonText: result.valid.length > 0 ? '오류 없는 ' + result.valid.length + '장만 먼저 보기' : null,
+            onButton: function () { startDeck(result.valid); }
+        });
+    }
+
+    /* ---------- 카드 표시 ---------- */
+    // 질문 앞의 ★(중요도)와 끝의 [출처]를 따로 떼어 작은 표식으로 보여줍니다.
+    function parseQuestion(raw) {
+        var text = raw.trim();
+        var stars = '';
+        var src = '';
+        var m = text.match(/^([★☆]{1,5})\s*/);
+        if (m) { stars = m[1]; text = text.slice(m[0].length); }
+        var s = text.match(/\s*\[([^\]]{1,40})\]\s*$/);
+        if (s) { src = s[1]; text = text.slice(0, s.index); }
+        if (!text.trim()) { text = raw.trim(); stars = ''; src = ''; }
+        return { stars: stars, src: src, text: text };
+    }
+
+    function render() {
+        var c = deck[cur];
+        var p = parseQuestion(c.q);
+
+        document.getElementById('question').textContent = p.text;
+        document.getElementById('answer').textContent = c.a.trim();
+        document.getElementById('source').textContent = p.src ? '출처: ' + p.src : '';
+
+        var starsEl = document.getElementById('stars');
+        if (p.stars) {
+            var filled = (p.stars.match(/★/g) || []).length;
+            starsEl.textContent = p.stars;
+            starsEl.setAttribute('aria-label', '중요도 ' + p.stars.length + '개 중 ' + filled + '개');
+            starsEl.style.display = 'inline-block';
+        } else {
+            starsEl.style.display = 'none';
+        }
+
+        document.getElementById('current').textContent = cur + 1;
+        document.getElementById('total').textContent = deck.length;
+        document.getElementById('bar').style.width = ((cur + 1) / deck.length * 100) + '%';
+    }
+
+    function flip() { cardEl.classList.toggle('flipped'); }
+
+    function go(delta) {
+        cur = (cur + delta + deck.length) % deck.length;
+        clearTimeout(swapTimer);
+        if (cardEl.classList.contains('flipped') && !reduceMotion()) {
+            // 먼저 카드를 앞면으로 돌리고, 옆면이 되어 안 보일 때 내용을 바꿔서 다음 정답이 미리 비치지 않게 함
+            cardEl.classList.remove('flipped');
+            swapTimer = setTimeout(render, 300);
+        } else {
+            cardEl.classList.remove('flipped');
+            render();
+        }
+    }
+    function nextCard() { go(1); }
+    function prevCard() { go(-1); }
+
+    cardEl.addEventListener('click', flip);
+
+    document.addEventListener('keydown', function (e) {
+        if (document.getElementById('card-screen').style.display === 'none') return;
+        if (e.key === 'ArrowRight') { nextCard(); }
+        else if (e.key === 'ArrowLeft') { prevCard(); }
+        else if ((e.key === ' ' || e.key === 'Enter') && e.target.tagName !== 'BUTTON') { e.preventDefault(); flip(); }
+    });
+
+    // 스마트폰: 좌우로 밀어서 넘기기
+    var touchX = null, touchY = null;
+    cardEl.addEventListener('touchstart', function (e) {
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+    }, { passive: true });
+    cardEl.addEventListener('touchend', function (e) {
+        if (touchX === null) return;
+        var dx = e.changedTouches[0].clientX - touchX;
+        var dy = e.changedTouches[0].clientY - touchY;
+        touchX = null;
+        if (Math.abs(dx) > 60 && Math.abs(dy) < 50) {
+            if (dx < 0) nextCard(); else prevCard();
+        }
+    }, { passive: true });
+
+    init();
+</script>
+</body>
+</html>

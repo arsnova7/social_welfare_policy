@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지정책론 플래시카드</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* 눈이 편한 차분한 초록 계열 (index.html의 플래시카드 색과 맞춤) */
+    body {
+        font-family: 'Pretendard', sans-serif;
+        background: linear-gradient(135deg, #2f7d5b 0%, #1b4332 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .container { width: 100%; max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+    .header { text-align: center; color: white; margin-bottom: 20px; }
+    .header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+    .header .sub { font-size: 1.05rem; font-weight: 600; opacity: 0.92; margin-bottom: 10px; word-break: keep-all; }
+    .header .count { font-size: 1.1rem; font-weight: 700; }
+    .progress { max-width: 340px; height: 6px; margin: 12px auto 0; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+    #bar { height: 100%; width: 0; background: white; border-radius: 3px; transition: width 0.3s; }
+
+    /* 카드 */
+    .stage { perspective: 1400px; margin: 12px 0; }
+    .card {
+        position: relative;
+        width: 100%;
+        height: min(460px, 60vh);
+        height: min(460px, 60dvh);
+        min-height: 320px;
+        cursor: pointer;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card:focus-visible { outline: 3px solid #fde68a; outline-offset: 4px; }
+
+    .side {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 26px 18px;
+        border-radius: 20px;
+        overflow-y: auto;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        word-break: keep-all;
+        white-space: pre-line;
+    }
+    .front { background: white; color: #1e293b; }
+    .back { background: #f0f7f2; color: #1b4332; transform: rotateY(180deg); }
+
+    .meta { display: flex; align-items: center; justify-content: space-between; min-height: 28px; white-space: normal; }
+    .chip { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; }
+    .chip-q { background: #f1f5f9; color: #475569; }
+    .chip-a { background: #cfe8d8; color: #1b4332; }
+    .stars { font-size: 0.95rem; font-weight: 800; color: #1f6b46; background: #e3f1e8; padding: 3px 10px; border-radius: 20px; display: none; }
+
+    /* 내용이 길어도 위쪽이 잘리지 않도록 margin:auto로 가운데 맞춤 */
+    .body { margin: auto; padding: 14px 0; text-align: center; font-size: 1.4rem; font-weight: 700; line-height: 1.55; }
+    .back .body { font-size: 1.55rem; font-weight: 800; }
+    .src { min-height: 1.2em; text-align: center; font-size: 0.85rem; color: #64748b; white-space: normal; }
+
+    .tip { text-align: center; color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 4px 0 14px; word-break: keep-all; }
+
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; }
+    .btn { padding: 18px 10px; border: none; border-radius: 12px; background: white; color: #1f6b46; font-family: inherit; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn:hover { background: #f1f5f9; transform: translateY(-2px); }
+    .btn:focus-visible { outline: 3px solid #fde68a; outline-offset: 2px; }
+
+    /* 데이터 검사 결과 화면 */
+    .problem-card { display: none; background: white; border-radius: 15px; padding: 28px; border-left: 6px solid #dc3545; box-shadow: 0 10px 30px rgba(0,0,0,0.25); color: #1e293b; }
+    .problem-card h2 { margin: 0 0 8px; font-size: 1.3rem; }
+    .problem-card .summary { margin: 0 0 16px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    .problem-list { list-style: none; margin: 0 0 8px; padding: 0; }
+    .problem-list li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #e0e7f1; line-height: 1.5; word-break: keep-all; }
+    .problem-list .tag { flex: none; min-width: 3.2rem; font-weight: 800; color: #dc3545; }
+    .problem-card .tips { margin: 12px 0 0; padding: 14px; background: #f3f6fa; border-radius: 10px; font-size: 0.92rem; line-height: 1.6; color: #2f3640; word-break: keep-all; }
+    .problem-card .tips ul { margin: 6px 0 0; padding-left: 20px; }
+    #partial-btn { width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 10px; background: #2e7d5b; color: white; font-weight: bold; font-size: 1.05rem; cursor: pointer; font-family: inherit; }
+    #partial-btn:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+
+    @media (max-width: 600px) {
+        body { padding: 14px; }
+        .header h1 { font-size: 1.6rem; }
+        .side { padding: 16px 18px 14px; }
+        .body { font-size: 1.2rem; }
+        .back .body { font-size: 1.3rem; }
+        .controls { grid-template-columns: 1fr 1fr; }
+        .controls .btn-list { grid-column: 1 / -1; }
+        .btn { padding: 16px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .card, #bar, .btn { transition: none; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="problem-screen" class="problem-card" role="alert">
+        <h2 id="problem-title"></h2>
+        <p id="problem-summary" class="summary"></p>
+        <ul id="problem-list" class="problem-list"></ul>
+        <div id="problem-tips" class="tips"></div>
+        <button id="partial-btn" type="button"></button>
+    </div>
+
+    <div id="card-screen">
+        <div class="header">
+            <h1 id="page-title">플래시카드</h1>
+            <p class="sub" id="page-sub"></p>
+            <p class="count"><span id="current">1</span> / <span id="total">0</span></p>
+            <div class="progress"><div id="bar"></div></div>
+        </div>
+
+        <div class="stage">
+            <div class="card" id="flashcard" role="button" tabindex="0" aria-label="카드 뒤집기">
+                <div class="side front">
+                    <div class="meta"><span class="chip chip-q">질문</span><span class="stars" id="stars"></span></div>
+                    <div class="body" id="question"></div>
+                    <div class="src" id="source"></div>
+                </div>
+                <div class="side back">
+                    <div class="meta"><span class="chip chip-a">정답</span></div>
+                    <div class="body" id="answer"></div>
+                    <div class="src"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="tip">카드를 누르면 정답이 보여요. 화살표 키나 좌우로 밀어서 넘길 수 있어요.</p>
+
+        <div class="controls">
+            <button class="btn" type="button" onclick="prevCard()">이전</button>
+            <button class="btn" type="button" onclick="nextCard()">다음</button>
+            <button class="btn btn-list" type="button" onclick="location.href='index.html'">목록으로 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<!-- ① 오류 수집용: 반드시 맨 위(②, ③보다 앞)에 두세요. 수정하지 마세요. -->
+<script>
+    window.__dataErrors = [];
+    window.addEventListener('error', function (e) {
+        window.__dataErrors.push({ msg: e.message, line: e.lineno });
+    });
+</script>
+
+<!-- ② 장 설정: 새 장을 만들 때 번호와 제목만 고치세요. -->
+<script>
+    const LECTURE = { no: 11, title: "빈곤과 사회보장" };
+</script>
+
+<!-- ③ 카드 데이터: 노트북LM이 만든 const cards = [...]; 를 통째로 덮어쓰세요.
+     아래 2장은 화면 확인용 예시입니다. 덮어쓸 때 이 예시도 같이 지우세요.
+     카드마다 q(질문)와 a(정답)가 모두 있어야 합니다. -->
+<script>
+    const cards = [
+        {"q": "★★★ 절대적 빈곤(Absolute Poverty)의 정의와 특징은? [워크북 p.118, 2015년, 2018년 기말 기출]",
+    "a": "생물학적 생존과 최저생활을 유지하는 데 필요한 최소한의 기본 욕구가 결핍된 상태를 의미합니다."
+  },
+  {
+    "q": "★★★ 상대적 빈곤(Relative Poverty)의 정의와 측정 방식은? [워크북 p.118, 2015년, 2018년 기말 기출]",
+    "a": "사회 전체 구성원의 전반적인 소득 및 생활 수준과의 비교에 기초하며, 주로 중위소득의 일정 비율(50% 등) 이하로 계측합니다."
+  },
+  {
+    "q": "★★★ 주관적 빈곤(Subjective Poverty)의 대표적 측정 방법은? [워크북 p.119]",
+    "a": "네덜란드 연구팀이 개발한 라이덴 방식(Leiden Method)으로, 개인들이 주관적으로 평가하는 최저 필요 소득 수준에 근거합니다."
+  },
+  {
+    "q": "★★★ 박탈(deprivation) 개념을 제시하고 82개 지표를 개발한 학자는? [워크북 p.119]",
+    "a": "피터 타운센드(P. Townsend)이며, 물리적 박탈과 사회적 박탈 두 가지 영역으로 나누어 측정했습니다."
+  },
+  {
+    "q": "★★★ 사회적 배제(Social Exclusion)의 핵심 개념과 특성은? [워크북 p.119]",
+    "a": "소득 결핍 중심 빈곤을 넘어 다차원성, 동태성, 관계성을 강조하며, 사회 주류 질서 및 노동시장으로부터 유리되는 기제입니다."
+  },
+  {
+    "q": "★★★ 빈곤을 보는 관점 중 '가난은 죄악이다(자유주의)'의 특징은? [워크북 p.122, 2013년, 2018년 기말 기출]",
+    "a": "가난을 개인의 게으름과 도덕적 부도덕 때문으로 보아 노동 강제와 억압적 구빈법적 통제를 시행했습니다."
+  },
+  {
+    "q": "★★★ 빈곤을 보는 관점 중 '가난은 나라의 책임이다(사회민주주의)'의 특징은? [워크북 p.122, 2013년, 2018년 기말 기출]",
+    "a": "가난의 원인을 사회 구조와 환경으로 보며, 시민의 사회권(수급권)으로서 공적 사회보장을 제공해야 한다고 봅니다."
+  },
+  {
+    "q": "★★★ 자선조직협회(COS)와 인보관(Settlement) 운동의 빈곤관 차이는? [워크북 p.124, 2014년, 2015년 기말 기출]",
+    "a": "COS는 가난을 개인 탓으로 보아 사례관리/도덕적 교화를 강조했고, 인보관은 가난을 구조적 문제로 보아 함께 거주하며 사회관리를 강조했습니다."
+  },
+  {
+    "q": "★★★ 런던 실태조사를 통해 빈곤율 30.7%를 밝혀내고 가난이 사회적 원인임을 과학적으로 입증한 인물은? [워크북 p.122, 2015년 기말 기출]",
+    "a": "찰스 부스(Charles Booth)입니다."
+  },
+  {
+    "q": "★★★ 영국의 1948년 국민부조법(National Assistance Act)의 역사적 의의는? [워크북 p.120]",
+    "a": "350여 년간 지속된 억압적 구빈법 체계를 완벽히 폐지하고 재원을 지방세에서 국세로 전환하여 최저생활 보장을 명시했습니다."
+  },
+  {
+    "q": "★★★ 1961년 「생활보호법」과 1999년 「국민기초생활 보장법」의 핵심적 권리성 차이는? [워크북 p.124, 2013년 기말 기출]",
+    "a": "생활보호법은 시혜적 '보호(피보호자)' 성격이었으나, 국민기초생활보장법은 근로능력과 상관없이 최저생활을 '시민의 당당한 권리(수급자)'로 규정했습니다."
+  },
+  {
+    "q": "★★★ 2015년 국민기초생활보장제도 개편의 핵심 내용 2가지는? [워크북 p.124, 2014년 기말 기출]",
+    "a": "통합급여에서 급여별 수급 기준을 다단계로 차등화한 '맞춤형 개별급여'로 전환하고 준거값으로 '기준 중위소득'을 도입했습니다."
+  },
+  {
+    "q": "★★★ 기준 중위소득의 정의는? [워크북 p.124, 2019년 기말 기출]",
+    "a": "대한민국 전체 가구의 소득을 순서대로 줄 세웠을 때 정확히 중앙에 위치하는 가구의 소득 수준입니다."
+  },
+  {
+    "q": "★★★ 국민기초생활보장제도의 7대 급여 항목은? [워크북 p.124]",
+    "a": "생계급여, 의료급여, 주거급여, 교육급여, 해산급여, 장제급여, 자활급여입니다."
+  },
+  {
+    "q": "★★★ 2024년 기준 국민기초생활보장 4대 주요 급여의 수급 기준 중위소득 비율은? [워크북 p.125]",
+    "a": "생계급여 32%(30%), 의료급여 40%, 주거급여 48%, 교육급여 50% 이하입니다."
+  },
+  {
+    "q": "★★★ 근로 능력이 있는 수급자(18~64세)에게 적용되는 조건부 생계급여의 취지는? [워크북 p.121]",
+    "a": "무조건적 현금 지원에 따른 복지 의존(도덕적 해이)을 방지하고 자활사업 참여 등 자립 노력을 조건으로 부과하는 방식입니다."
+  },
+  {
+    "q": "★★★ 공공부조(Social Assistance) 제도의 3대 일반적 특성은? [워크북 p.127, 2014년, 2018년 기말 기출]",
+    "a": "국고 조세 재원, 엄격한 자산조사를 통한 선별, 사후 구제적 최후의 사회안전망 역할입니다."
+  },
+  {
+    "q": "★★★ 송파 세 모녀 사건(2014년) 이후 통과된 일명 '송파 세 모녀 3법'은? [워크북 p.121]",
+    "a": "국민기초생활 보장법 개정안, 긴급복지지원법 개정안, 사회보장급여의 이용·제공 및 수급권자 발굴에 관한 법률 제정안입니다."
+  },
+  {
+    "q": "★★☆ 전물량방식(Market Basket Approach)의 계측 기법은? [워크북 p.118]",
+    "a": "의식주 등 최저생활에 필요한 필수품목을 하나하나 설정하고 각 품목의 최저 가격을 다 합산하여 빈곤선을 계측합니다."
+  },
+  {
+    "q": "★★☆ 반물량방식(Engel's Coefficient Approach)의 계측 기법은? [워크북 p.118]",
+    "a": "최저 식료품비를 구한 뒤 엥겔계수의 역수(1/엥겔계수)를 곱하여 빈곤선을 간편하게 산출합니다."
+  },
+  {
+    "q": "★★☆ 피터 타운센드의 82개 박탈 지표 중 2가지 주요 영역은? [워크북 p.119]",
+    "a": "음식·주거·환경 등 '물리적 박탈'과 사회참여·교육·가족관계 등 '사회적 박탈'입니다."
+  },
+  {
+    "q": "★★☆ 튜더 왕조 이전 봉건주의 시기의 빈곤관은? [워크북 p.122, 2013년, 2018년 기말 기출]",
+    "a": "가난은 신이 준 거룩한 운명이자 숙명이므로 현실에 순응하고 참고 따라야 한다고 여겼습니다."
+  },
+  {
+    "q": "★★☆ 영국 구빈법 위원회에서 빈곤이 국가 책임임을 주장한 '소수파 보고서' 작성자는? [워크북 p.122]",
+    "a": "비어트리스 웹(Beatrice Webb)입니다."
+  },
+  {
+    "q": "★★☆ 근로빈곤층(Working Poor, 워킹푸어)의 정의는? [워크북 p.123]",
+    "a": "열심히 노동에 참여하고 있음에도 불구하고 저임금, 불안정 고용으로 가처분소득이 빈곤선 이하인 계층입니다."
+  },
+  {
+    "q": "★★☆ 부양의무자 기준의 엄격 적용이 가져온 주요 비극과 부작용은? [워크북 p.122-123]",
+    "a": "실제 부양 능력이 없거나 단절된 친족 소득 때문에 가난한 빈곤층이 수급에서 탈락하는 복지 사각지대 발생입니다."
+  },
+  {
+    "q": "★★☆ 해산급여와 장제급여의 지원 내용 및 2024년 기준 금액은? [워크북 p.125]",
+    "a": "해산급여는 출산 시 1인당 70만 원, 장제급여는 사망 시 장제 조치에 1구당 80만 원의 현금을 지원합니다."
+  },
+  {
+    "q": "★★☆ 세계 최초의 인보관 시설 명칭과 설립 인물은? [워크북 p.123]",
+    "a": "1884년 런던 동부에 바넷(Barnett) 목사 등이 아놀드 토인비를 기려 세운 토인비 홀(Toynbee Hall)입니다."
+  },
+  {
+    "q": "★★☆ 공공부조에서 수급 자격 조사를 자산조사(Means Test)로 할 때 나타나는 단점은? [워크북 p.120]",
+    "a": "수급자에게 빈곤에 대한 심각한 사회적 낙인(stigma)과 수치심을 부여하고 행정비용이 많이 듭니다."
+  },
+  {
+    "q": "★★☆ 선별주의 정책과 보편주의 정책의 빈곤 원인 진단 차이는? [워크북 p.126]",
+    "a": "선별주의는 개인의 나태와 도덕적 부도덕을, 보편주의는 시장과 사회의 구조적 결함을 빈곤 원인으로 봅니다."
+  },
+  {
+    "q": "★★☆ 공공부조 제도의 사후 구제적(remedial) 특성이란? [워크북 p.120]",
+    "a": "위험 발생 전 예방하는 사회보험과 달리, 이미 빈곤 상태에 떨어진 수급자를 사후적으로 지원하는 특성입니다."
+  },
+  {
+    "q": "★★☆ 국민기초생활보장 수급 신청 주체와 방식은? [워크북 p.120]",
+    "a": "수급권자 본인, 친족, 기타 관계인의 신청을 원칙으로 하며, 동의 하에 사회복지전담공무원의 직권 신청도 가능합니다."
+  },
+  {
+    "q": "★★☆ 맞춤형 개별급여 도입 후 기초생활보장 수급률 변화 추이는? [워크북 p.124]",
+    "a": "부양의무자 기준 완화 등으로 2014년 2.6%에서 2022년 4.8%로 대폭 확대되었습니다."
+  },
+  {
+    "q": "★★☆ 국가최저선(National Minimum)의 정의는? [워크북 p.119]",
+    "a": "국가가 공권력과 조세를 바탕으로 모든 시민에게 공적으로 보장하는 최소한의 건강하고 문화적인 생계 보장 기준선입니다."
+  },
+  {
+    "q": "★★☆ 기초생활보장 수급자의 근로 소득 일부를 차감해 주는 '근로소득 공제'의 목적은? [워크북 p.121]",
+    "a": "소득 증가에 따른 급여 전면 중단(실업함정)을 막고 근로 유인을 계속 제공하기 위함입니다."
+  },
+  {
+    "q": "★★☆ 한국의 대표적인 3대 공공부조 제도는? [워크북 p.120]",
+    "a": "국민기초생활보장제도, 의료급여제도, 기초연금제도입니다."
+  },
+  {
+    "q": "★★☆ 공공부조 제도가 강력한 수직적 소득재분배 효과를 내는 이유는? [워크북 p.127, 2014년, 2018년 기말 기출]",
+    "a": "일반 조세 수입(고소득층 및 국민 세금)을 재원으로 소득 최하위 빈곤층에게 무기여 급여를 집중 지급하기 때문입니다."
+  },
+  {
+    "q": "★★☆ 계급과 빈곤의 관점에서 본 사회복지제도의 기능은? [워크북 p.125]",
+    "a": "생산수단 미소유로 노동 판매에 의존하는 빈곤층에게 소득 이전을 제공하여 삶의 안정을 돕는 집합적 노력입니다."
+  },
+  {
+    "q": "★★☆ 엥겔계수(Engel's Coefficient)의 개념과 빈곤선 활용 방식은? [워크북 p.118]",
+    "a": "생계비 중 식료품비가 차지하는 비율이며, 반물량방식에서 식료품비에 엥겔계수 역수를 곱해 빈곤선을 산출합니다."
+  },
+  {
+    "q": "★★☆ 주관적 빈곤 방식인 라이덴 기법의 작동 메커니즘은? [워크북 p.119]",
+    "a": "설문 조사를 통해 응답자들이 직접 느끼는 주관적 최저 필요 소득과 실제 소득을 교차 분석하여 빈곤선을 도출합니다."
+  },
+  {
+    "q": "★★☆ COS의 '우애방문단' 활동 방식은? [워크북 p.124]",
+    "a": "상류층 귀부인들이 빈민가를 '방문'하여 개별 상담과 도덕적 조언을 전하는 상의하달식 자선 활동이었습니다."
+  },
+  {
+    "q": "★☆☆ 런던 실태조사를 실시한 찰스 부스의 본래 신분과 직업은? [워크북 p.122, 2015년 기말 기출]",
+    "a": "사재를 털어 조사를 지휘한 영국의 부유한 선주(귀족 사업가)였습니다."
+  },
+  {
+    "q": "★☆☆ 최초의 인보관 토인비 홀이 세워진 도시와 연도는? [워크북 p.123]",
+    "a": "1884년 영국 런던 동부(East End)입니다."
+  },
+  {
+    "q": "★☆☆ 영국 구빈법을 1948년 최종 폐지시킨 법안 명칭은? [워크북 p.120]",
+    "a": "1948년 국민부조법(National Assistance Act)입니다."
+  },
+  {
+    "q": "★☆☆ 한국 생활보호법이 제정된 연도는? [워크북 p.124, 2013년 기말 기출]",
+    "a": "1961년입니다."
+  },
+  {
+    "q": "★☆☆ 한국 국민기초생활 보장법이 제정된 연도와 시행 연도는? [워크북 p.124]",
+    "a": "1999년 제정, 2000년 10월 시행입니다."
+  },
+  {
+    "q": "★☆☆ 맞춤형 개별급여가 시작된 연도와 월은? [워크북 p.124, 2014년 기말 기출]",
+    "a": "2015년 7월입니다."
+  },
+  {
+    "q": "★☆☆ 2024년 기준 생계급여의 수급 기준 중위소득 비율은? [워크북 p.125]",
+    "a": "기준 중위소득 32% 이하입니다."
+  },
+  {
+    "q": "★☆☆ 2024년 기준 의료급여의 수급 기준 중위소득 비율은? [워크북 p.125]",
+    "a": "기준 중위소득 40% 이하입니다."
+  },
+  {
+    "q": "★☆☆ 출산 수급자에게 지급되는 70만 원 현금 급여 명칭은? [워크북 p.125]",
+    "a": "해산급여입니다."
+  },
+  {
+    "q": "★☆☆ 사망 수급자 장례에 지급되는 80만 원 현금 급여 명칭은? [워크북 p.125]",
+    "a": "장제급여입니다."}
+    ];</script>
+
+<!-- ④ 프로그램 본체: 수정하지 마세요. -->
+<script>
+    var deck = [];
+    var cur = 0;
+    var swapTimer = null;
+
+    document.title = '제' + LECTURE.no + '장 - ' + LECTURE.title;
+    document.getElementById('page-title').textContent = '제' + LECTURE.no + '장 플래시카드';
+    document.getElementById('page-sub').textContent = LECTURE.title;
+
+    var cardEl = document.getElementById('flashcard');
+
+    function reduceMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    /* ---------- 데이터 검사 ---------- */
+    function validateCards(data) {
+        var errors = [];
+        var valid = [];
+
+        if (!Array.isArray(data) || data.length === 0) {
+            errors.push({ tag: '전체', text: 'cards가 비어 있거나 배열([ ])이 아닙니다.' });
+            return { errors: errors, valid: valid };
+        }
+
+        data.forEach(function (item, i) {
+            var tag = (i + 1) + '번 카드';
+            var problems = [];
+            if (!item || typeof item !== 'object') {
+                problems.push('카드가 { } 형식이 아닙니다.');
+            } else {
+                if (typeof item.q !== 'string' || !item.q.trim()) problems.push('q(질문)가 없거나 비어 있습니다.');
+                if (typeof item.a !== 'string' || !item.a.trim()) problems.push('a(정답)가 없거나 비어 있습니다.');
+            }
+            if (problems.length) {
+                problems.forEach(function (t) { errors.push({ tag: tag, text: t }); });
+            } else {
+                valid.push(item);
+            }
+        });
+
+        return { errors: errors, valid: valid };
+    }
+
+    function showProblemScreen(opts) {
+        document.getElementById('card-screen').style.display = 'none';
+        document.getElementById('problem-screen').style.display = 'block';
+        document.getElementById('problem-title').textContent = opts.title;
+        document.getElementById('problem-summary').textContent = opts.summary;
+
+        var list = document.getElementById('problem-list');
+        list.innerHTML = '';
+        opts.items.forEach(function (it) {
+            var li = document.createElement('li');
+            var tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = it.tag;
+            var txt = document.createElement('span');
+            txt.textContent = it.text;
+            li.appendChild(tag);
+            li.appendChild(txt);
+            list.appendChild(li);
+        });
+
+        var tips = document.getElementById('problem-tips');
+        tips.innerHTML = '';
+        if (opts.tips && opts.tips.length) {
+            tips.appendChild(document.createTextNode('자주 생기는 원인'));
+            var ul = document.createElement('ul');
+            opts.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                ul.appendChild(li);
+            });
+            tips.appendChild(ul);
+            tips.style.display = 'block';
+        } else {
+            tips.style.display = 'none';
+        }
+
+        var btn = document.getElementById('partial-btn');
+        if (opts.buttonText) {
+            btn.textContent = opts.buttonText;
+            btn.style.display = 'block';
+            btn.onclick = opts.onButton;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function startDeck(list) {
+        deck = list;
+        cur = 0;
+        document.getElementById('problem-screen').style.display = 'none';
+        document.getElementById('card-screen').style.display = 'block';
+        render();
+    }
+
+    function init() {
+        // 데이터 문법 오류: ③ 블록이 아예 실행되지 못한 경우
+        if (typeof cards === 'undefined') {
+            var items = window.__dataErrors.map(function (er) {
+                return { tag: er.line ? ('약 ' + er.line + '줄') : '오류', text: er.msg };
+            });
+            if (!items.length) items.push({ tag: '오류', text: 'cards를 찾을 수 없습니다. const cards = [ ... ]; 형태가 맞는지 확인하세요.' });
+            showProblemScreen({
+                title: '⚠️ 카드 데이터를 읽지 못했어요',
+                summary: '데이터 부분에 문법 오류가 있어서 프로그램이 멈췄습니다. 아래 줄 근처를 확인하세요.',
+                items: items,
+                tips: [
+                    '문장 안에 큰따옴표(")가 들어 있음 → 작은따옴표(\')로 바꾸기',
+                    '카드와 카드 사이 쉼표(,) 빠짐, 또는 맨 끝의 ]; 가 지워짐',
+                    '문장 한가운데에서 줄이 바뀜 (한 문장은 한 줄로)',
+                    '붙여넣은 글에 // 가 포함되어 뒷부분이 주석 처리됨'
+                ]
+            });
+            return;
+        }
+
+        var result = validateCards(cards);
+
+        if (result.errors.length === 0) {
+            startDeck(result.valid);
+            return;
+        }
+
+        var total = Array.isArray(cards) ? cards.length : 0;
+        var badCount = total - result.valid.length;
+        showProblemScreen({
+            title: '⚠️ 고칠 곳이 ' + result.errors.length + '군데 있어요',
+            summary: badCount > 0
+                ? '전체 ' + total + '장 중 ' + badCount + '장에 문제가 있습니다. 데이터를 고치고 새로고침하세요.'
+                : '카드 데이터를 확인하고 새로고침하세요.',
+            items: result.errors,
+            tips: ['카드마다 q(질문)와 a(정답)가 모두 있어야 하고, 둘 다 글자(따옴표로 감싼 문장)여야 합니다'],
+            buttonText: result.valid.length > 0 ? '오류 없는 ' + result.valid.length + '장만 먼저 보기' : null,
+            onButton: function () { startDeck(result.valid); }
+        });
+    }
+
+    /* ---------- 카드 표시 ---------- */
+    // 질문 앞의 ★(중요도)와 끝의 [출처]를 따로 떼어 작은 표식으로 보여줍니다.
+    function parseQuestion(raw) {
+        var text = raw.trim();
+        var stars = '';
+        var src = '';
+        var m = text.match(/^([★☆]{1,5})\s*/);
+        if (m) { stars = m[1]; text = text.slice(m[0].length); }
+        var s = text.match(/\s*\[([^\]]{1,40})\]\s*$/);
+        if (s) { src = s[1]; text = text.slice(0, s.index); }
+        if (!text.trim()) { text = raw.trim(); stars = ''; src = ''; }
+        return { stars: stars, src: src, text: text };
+    }
+
+    function render() {
+        var c = deck[cur];
+        var p = parseQuestion(c.q);
+
+        document.getElementById('question').textContent = p.text;
+        document.getElementById('answer').textContent = c.a.trim();
+        document.getElementById('source').textContent = p.src ? '출처: ' + p.src : '';
+
+        var starsEl = document.getElementById('stars');
+        if (p.stars) {
+            var filled = (p.stars.match(/★/g) || []).length;
+            starsEl.textContent = p.stars;
+            starsEl.setAttribute('aria-label', '중요도 ' + p.stars.length + '개 중 ' + filled + '개');
+            starsEl.style.display = 'inline-block';
+        } else {
+            starsEl.style.display = 'none';
+        }
+
+        document.getElementById('current').textContent = cur + 1;
+        document.getElementById('total').textContent = deck.length;
+        document.getElementById('bar').style.width = ((cur + 1) / deck.length * 100) + '%';
+    }
+
+    function flip() { cardEl.classList.toggle('flipped'); }
+
+    function go(delta) {
+        cur = (cur + delta + deck.length) % deck.length;
+        clearTimeout(swapTimer);
+        if (cardEl.classList.contains('flipped') && !reduceMotion()) {
+            // 먼저 카드를 앞면으로 돌리고, 옆면이 되어 안 보일 때 내용을 바꿔서 다음 정답이 미리 비치지 않게 함
+            cardEl.classList.remove('flipped');
+            swapTimer = setTimeout(render, 300);
+        } else {
+            cardEl.classList.remove('flipped');
+            render();
+        }
+    }
+    function nextCard() { go(1); }
+    function prevCard() { go(-1); }
+
+    cardEl.addEventListener('click', flip);
+
+    document.addEventListener('keydown', function (e) {
+        if (document.getElementById('card-screen').style.display === 'none') return;
+        if (e.key === 'ArrowRight') { nextCard(); }
+        else if (e.key === 'ArrowLeft') { prevCard(); }
+        else if ((e.key === ' ' || e.key === 'Enter') && e.target.tagName !== 'BUTTON') { e.preventDefault(); flip(); }
+    });
+
+    // 스마트폰: 좌우로 밀어서 넘기기
+    var touchX = null, touchY = null;
+    cardEl.addEventListener('touchstart', function (e) {
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+    }, { passive: true });
+    cardEl.addEventListener('touchend', function (e) {
+        if (touchX === null) return;
+        var dx = e.changedTouches[0].clientX - touchX;
+        var dy = e.changedTouches[0].clientY - touchY;
+        touchX = null;
+        if (Math.abs(dx) > 60 && Math.abs(dy) < 50) {
+            if (dx < 0) nextCard(); else prevCard();
+        }
+    }, { passive: true });
+
+    init();
+</script>
+</body>
+</html>

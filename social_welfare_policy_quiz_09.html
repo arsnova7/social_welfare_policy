@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지정책론 퀴즈</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root {
+        --primary: #b45309;
+        --bg-gray: #f4f6f8;
+        --success: #28a745;
+        --danger: #dc3545;
+    }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .header h1 { font-size: 1.8rem; color: #14213d; font-weight: 800; margin-bottom: 10px; word-break: keep-all; }
+    .header p { color: #55657d; font-weight: bold; font-size: 1.1rem; margin: 0; }
+    .header .score-text { margin-top: 6px; color: #166534; font-size: 1rem; }
+
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .q-type { display: inline-block; background: #e0e7f1; color: #14213d; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 15px; font-weight: 700; }
+    #question-text { font-weight: bold; font-size: 1.2rem; margin-bottom: 25px; word-break: keep-all; line-height: 1.4; color: #14213d; }
+
+    .option-btn { width: 100%; text-align: left; padding: 16px; margin: 10px 0; border: 1.5px solid #e0e7f1; border-radius: 10px; background: white; cursor: pointer; font-size: 1.05rem; transition: 0.2s; line-height: 1.4; color: #2f3640; font-weight: 500; font-family: inherit; }
+    .option-btn:hover { background: #fff7ed; border-color: var(--primary); }
+    .option-btn:focus-visible, .btn-next:focus-visible, .result-btn:focus-visible { outline: 3px solid #14213d; outline-offset: 2px; }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+
+    .btn-next { width: 100%; padding: 16px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 25px; display: none; font-size: 1.1rem; transition: 0.2s; font-family: inherit; }
+    .btn-next:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    .hint-box, .exp-box { padding: 18px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; word-break: keep-all; font-size: 0.95rem; }
+    .hint-box { background: #fffbeb; border: 1px solid #fbd38d; color: #b45309; }
+    .exp-box { background: #f0fdf4; border: 1px solid #bbf7d0; color: #065f46; }
+
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width: 100%; padding: 16px; margin: 10px 0; border: 1.5px solid #e0e7f1; border-radius: 10px; background: white; cursor: pointer; font-size: 1.05rem; font-weight: bold; transition: 0.2s; font-family: inherit; }
+    .result-btn:hover { background: #f3f6fa; }
+    .result-score { margin: 6px 0 4px; font-size: 3.4rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+    .result-detail { margin: 0 0 10px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    #result-msg { margin: 0 0 18px; line-height: 1.6; word-break: keep-all; color: #14213d; font-weight: 600; }
+    .missed { text-align: left; margin: 0 0 18px; padding: 10px 16px; border: 1px solid #e0e7f1; border-radius: 10px; }
+    .missed summary { cursor: pointer; font-weight: 700; color: #14213d; padding: 4px 0; }
+    .missed ol { margin: 10px 0 4px; padding-left: 26px; font-size: 0.95rem; line-height: 1.55; word-break: keep-all; color: #2f3640; }
+    .missed li { margin-bottom: 8px; }
+
+    /* 문제 화면 아래의 목록으로 돌아가기 버튼 */
+    .list-btn { width: 100%; padding: 14px; margin-top: 16px; border: 1.5px solid #cbd5e1; border-radius: 10px; background: white; color: #14213d; font-family: inherit; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .list-btn:hover { background: #f3f6fa; }
+    .list-btn:focus-visible { outline: 3px solid #14213d; outline-offset: 2px; }
+
+    /* 데이터 검사 결과 화면 */
+    .problem-card { display: none; background: white; border-radius: 15px; padding: 28px; border-left: 6px solid var(--danger); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .problem-card h2 { margin: 0 0 8px; font-size: 1.3rem; color: #14213d; }
+    .problem-card .summary { margin: 0 0 16px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    .problem-list { list-style: none; margin: 0 0 8px; padding: 0; }
+    .problem-list li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #e0e7f1; line-height: 1.5; word-break: keep-all; }
+    .problem-list .tag { flex: none; min-width: 3.2rem; font-weight: 800; color: var(--danger); }
+    .problem-list .warn .tag { color: var(--primary); }
+    .problem-card .tips { margin: 12px 0 0; padding: 14px; background: #f3f6fa; border-radius: 10px; font-size: 0.92rem; line-height: 1.6; color: #2f3640; word-break: keep-all; }
+    .problem-card .tips ul { margin: 6px 0 0; padding-left: 20px; }
+    #partial-btn { width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; font-size: 1.05rem; cursor: pointer; font-family: inherit; }
+    #partial-btn:focus-visible { outline: 3px solid #14213d; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="problem-screen" class="problem-card" role="alert">
+        <h2 id="problem-title"></h2>
+        <p id="problem-summary" class="summary"></p>
+        <ul id="problem-list" class="problem-list"></ul>
+        <div id="problem-tips" class="tips"></div>
+        <button id="partial-btn" type="button"></button>
+    </div>
+
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title"></h1>
+            <p id="progress-text"></p>
+            <p id="score-text" class="score-text"></p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-type" class="q-type">개념확인</div>
+            <div id="question-text"></div>
+            <div id="options-container"></div>
+
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+
+            <button id="next-btn" class="btn-next" type="button" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+
+        <button class="list-btn" type="button" onclick="goList()">🏠 목록으로 돌아가기</button>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2 id="result-title">🎊 학습을 마쳤습니다!</h2>
+        <p id="result-score" class="result-score"></p>
+        <p id="result-detail" class="result-detail"></p>
+        <p id="result-msg"></p>
+        <details id="missed-details" class="missed">
+            <summary id="missed-summary"></summary>
+            <ol id="missed-list"></ol>
+        </details>
+        <button id="retry-missed-btn" class="result-btn" type="button" style="background:var(--primary); color:white; border:none;" onclick="retryMissed()"></button>
+        <button class="result-btn" type="button" onclick="retryAll()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" type="button" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<!-- ① 오류 수집용: 반드시 맨 위(②, ③보다 앞)에 두세요. 수정하지 마세요. -->
+<script>
+    window.__dataErrors = [];
+    window.addEventListener('error', function (e) {
+        window.__dataErrors.push({ msg: e.message, line: e.lineno });
+    });
+</script>
+
+<!-- ② 장 설정: 새 장을 만들 때 번호와 제목만 고치세요. -->
+<script>
+    const LECTURE = { no: 9, title: "사회복지정책의 설계: 할당 및 급여" };
+</script>
+
+<!-- ③ 퀴즈 데이터: 노트북LM이 만든 const quizData = [...]; 를 통째로 덮어쓰세요.
+     아래 1문항은 화면 확인용 예시입니다. 덮어쓸 때 이 예시도 같이 지우세요.
+     문제마다 type, q, o, a, h, e 가 모두 있어야 하고, a는 첫 번째 보기가 0입니다. -->
+<script>
+    const quizData = [
+        {
+            "type": "개념확인",
+    "q": "길버트와 스펙트(Gilbert & Specht)가 제시한 사회복지 수급 자격(할당)의 4가지 원칙에 해당하지 않는 것은? [워크북 p.107, 2015년, 2017년 기말 기출]",
+    "o": [
+      "귀속적 욕구(attributed need)",
+      "보상(compensation)",
+      "진단적 구체성(diagnostic specificness)",
+      "임의적 선택(arbitrary selection)"
+    ],
+    "a": 3,
+    "h": "4대 할당 원칙은 귀속적 욕구, 보상, 진단적 구체성, 자산조사적 욕구입니다.",
+    "e": "정답: 3 [반복 출제 개념]\n길버트와 스펙트의 4대 할당 원칙은 ① 귀속적 욕구(범과거적·인구학적 집단), ② 보상(사회적 기여나 피해), ③ 진단적 구체성(전문가 진단), ④ 자산조사적 욕구(소득·재산 조사)입니다. 임의적 선택은 해당하지 않습니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "사회복지 급여 형태 중 '소비자(수급자)의 선택의 자유'를 가장 완벽하게 보장하는 형태는? [워크북 p.107, 2013년, 2018년, 2019년 기말 기출]",
+    "o": [
+      "현금급여(cash)",
+      "현물급여(in-kind)",
+      "증서/바우처(voucher)",
+      "기회(opportunity)"
+    ],
+    "a": 0,
+    "h": "화폐 형태로 지급되어 어디서나 시장 재화를 자유롭게 구매할 수 있는 급여입니다.",
+    "e": "정답: 0 [반복 출제 개념]\n현금급여는 화폐로 지급되어 수급자의 선택 자율성과 유연성이 가장 높으며, 운영 행정비용이 적게 들고 낙인(stigma)감이 가장 적습니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "현물급여(in-kind)가 현금급여에 비해 가지는 주요 장점에 해당하지 않는 것은? [워크북 p.108, 2014년, 2016년, 2018년 기말 기출]",
+    "o": [
+      "정책 목표 달성의 확실성이 높다.",
+      "남용이나 오용(misuse)의 가능성을 방지한다.",
+      "대량 생산 및 대량 구매를 통해 규모의 경제 효과를 얻을 수 있다.",
+      "수급자의 선택 자율성을 극대화하고 운영 행정비용을 최소화한다."
+    ],
+    "a": 3,
+    "h": "선택의 자율성과 행정비용 최소화는 현금급여의 장점입니다.",
+    "e": "정답: 3 [반복 출제 개념]\n현물급여는 정부가 의도한 정책 목표 달성(목표효율성)이 확실하고, 도덕적 해이나 오용을 막을 수 있으며, 대량 구매를 통한 규모의 경제가 가능합니다. 그러나 수급자의 선택권이 제한되고 운송·보관 등 행정 관리비용이 많이 듭니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "현금급여의 수급자 선택 자율성과 현물급여의 정책 목표 달성을 절충·조화시킨 급여 형태는? [워크북 p.108, 2016년, 2019년 기말 기출]",
+    "o": [
+      "증서/바우처(voucher)",
+      "권력(power)",
+      "기회(opportunity)",
+      "조세감면"
+    ],
+    "a": 0,
+    "h": "특정한 재화나 서비스로만 교환할 수 있는 이용권이나 쿠폰 형태입니다.",
+    "e": "정답: 0 [반복 출제 개념]\n증서(바우처)는 지정된 품목(식료품, 보육 서비스, 에너질 등)에 대해서만 구매할 수 있도록 제한함으로써, 수급자에게 제한된 선택권을 주면서도 정책 목표 달성을 도모하는 절충형 급여입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "보편주의(Universalism)와 선별주의(Selectivism)의 특성을 비교한 내용으로 올바르지 않은 것은? [워크북 p.107, 2013년, 2017년 기말 기출]",
+    "o": [
+      "보편주의는 낙인(stigma)을 방지하고 사회적 통합에 유리하다.",
+      "선별주의는 자산조사를 통하므로 목표효율성(target efficiency)이 높다.",
+      "보편주의는 모든 국민을 대상으로 하므로 재정 소요가 크다.",
+      "선별주의는 수급권자의 권리의식을 높이고 낙인감을 완전히 제거한다."
+    ],
+    "a": 3,
+    "h": "선별주의는 엄격한 자산조사 과정에서 심각한 수치심과 낙인(stigma)을 유발합니다.",
+    "e": "정답: 3 [반복 출제 개념]\n선별주의는 자산조사를 거쳐 저소득 빈곤층에게만 지원하므로 불필요한 예산 낭비를 막고 목표효율성이 높으나, 수급자에게 빈곤에 대한 심각한 낙인감(stigma)과 수치심을 유발합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책의 4대 핵심 설계 요소(Dimensions of Choice)에 해당하지 않는 것은? [워크북 p.96]",
+    "o": [
+      "할당/대상(who gets what)",
+      "급여 형태(what is given)",
+      "전달체계(how it is delivered)",
+      "해외 차관(how it is borrowed)"
+    ],
+    "a": 3,
+    "h": "길버트와 테렐(Gilbert & Terrell)의 4대 정책 설계 분석 틀입니다.",
+    "e": "정답: 3\n길버트와 테렐의 4대 정책 설계 선택 차원은 ① 대상(할당: 누구에게), ② 급여(무엇을), ③ 전달체계(어떻게 전달하는가), ④ 재원(어떻게 자금을 조달하는가)입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "귀속적 욕구(attributed need) 원칙에 기초하여 급여 대상을 결정하는 예시는? [워크북 p.97]",
+    "o": [
+      "모든 65세 이상 노인에게 지급되는 기초연금",
+      "산업재해를 당한 근로자에게 지급되는 요양급여",
+      "의사의 정밀 진단을 받은 장애인에게 지급되는 장구 구입비",
+      "소득인정액이 최저생계비 이하인 가구에 지급되는 생계급여"
+    ],
+    "a": 0,
+    "h": "특정 인구학적 집단(연령, 성별 등)에 속한다는 조건만으로 욕구를 인정합니다.",
+    "e": "정답: 0\n귀속적 욕구는 과거 또는 현재의 특정 인구학적 집단(예: 일정 연령 이상의 노인, 아동)에 속하는 것 자체로 복지 욕구가 있다고 보고 대상을 할당하는 원칙입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회적 기여나 과거의 불이익·피해에 대한 반대급부로 수급 자격을 주는 할당 원칙은? [워크북 p.97]",
+    "o": [
+      "보상(compensation)",
+      "귀속적 욕구",
+      "자산조사적 욕구",
+      "진단적 구체성"
+    ],
+    "a": 0,
+    "h": "국가유공자, 참전용사, 산업재해 피해자 등에 대한 보상 성격의 할당입니다.",
+    "e": "정답: 0\n보상 원칙은 과거 사회적 기여(참전, 조세 납부)나 사회적 피해(산업재해, 국가 폭력 피해)에 대한 공적 보전 차원에서 수급 권리를 인정하는 할당 기준입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "의사나 사회복지사 등 전문가의 객관적 진단과 평정을 통해 급여 대상을 판단하는 원칙은? [워크북 p.97]",
+    "o": [
+      "진단적 구체성(diagnostic specificness)",
+      "귀속적 욕구",
+      "자산조사적 욕구",
+      "시장 구매력"
+    ],
+    "a": 0,
+    "h": "전문가의 과학적 판정과 평가 점수가 필요한 기준입니다.",
+    "e": "정답: 0\n진단적 구체성은 전문가(의사, 임상심리사, 사회복지사)의 개별적 판단, 진단서, 장기요양 등급 판정 등 전문적 평정 결과에 기초하여 수급 여부를 결정하는 원칙입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "신청자의 소득과 재산을 엄격히 조사하여 기준 미달자에게만 복지 급여를 제공하는 원칙은? [워크북 p.97]",
+    "o": [
+      "자산조사적 욕구(means-tested need)",
+      "귀속적 욕구",
+      "보상 원칙",
+      "보편적 원칙"
+    ],
+    "a": 0,
+    "h": "공공부조 제도에서 주로 사용되는 자격 검증 기준입니다.",
+    "e": "정답: 0\n자산조사적 욕구는 개별 가구의 소득과 재산을 조사하여 공적 기준 이하의 경제적 빈곤층에게만 급여를 할당하는 선별적 방식입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "보편주의 할당 원칙의 장점에 해당하는 것은? [워크북 p.98]",
+    "o": [
+      "모든 시민의 사회적 권리(social rights)를 보장하고 낙인감을 최소화한다.",
+      "한정된 예산을 가장 가난한 빈곤층에게만 집중 투입할 수 있다.",
+      "자산조사를 통해 불필요한 예산 누수를 완벽히 방지한다.",
+      "소비자들의 자율적 경쟁을 유도하여 가격 인하를 가져온다."
+    ],
+    "a": 0,
+    "h": "자격에 구애받지 않는 시민권으로서의 복지 보장과 사회적 연대감 형성입니다.",
+    "e": "정답: 0\n보편주의는 모든 시민에게 형평성 있게 권리를 보장하므로 낙인을 방지하고, 구매력에 상관없이 계층 간 연대의식과 사회통합을 강화합니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "선별주의 할당 원칙의 장점에 해당하는 것은? [워크북 p.98]",
+    "o": [
+      "목표효율성(target efficiency)이 높아 예산 대비 빈곤퇴치 효과가 크다.",
+      "모든 국민의 사회적 유대감과 연대의식을 극대화한다.",
+      "자산조사 과정에 행정 비용이 전혀 소요되지 않는다.",
+      "수급자의 사회적 낙인(stigma)을 완벽히 제거해 준다."
+    ],
+    "a": 0,
+    "h": "복지 자원을 꼭 필요한 빈곤층에게 집중시키는 비용 대비 효율성입니다.",
+    "e": "정답: 0\n선별주의는 한정된 복지 자원을 가장 극심한 빈곤층에게 집중하므로 목표효율성(적절한 표적화)이 높고 예산 절감 효과가 큽니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "선별주의 제도를 운영할 때 수급 신청자들이 겪게 되는 주요 부작용은? [워크북 p.98]",
+    "o": [
+      "자산조사 과정에서의 수치심 및 사회적 낙인(stigma)",
+      "과도한 현금지급으로 인한 세금 낭비",
+      "모든 국민이 수급자가 되려는 무임승차 현상",
+      "중산층의 과도한 혜택 독점"
+    ],
+    "a": 0,
+    "h": "자신의 가난을 입증해야 하는 과정에서 오는 심리적·사회적 굴욕감입니다.",
+    "e": "정답: 0\n선별주의는 엄격한 소득·재산 조사 및 부양의무자 입증을 요구하므로 수급자에게 빈곤에 대한 심각한 굴욕감과 사회적 낙인(stigma)을 부여합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "수급 자격을 특정 조건을 갖춘 자로 제한하되, 그 자격 요건을 완화하거나 엄격하게 조절하는 현상을 가리키는 용어는? [워크북 p.99]",
+    "o": [
+      "할당의 투입 조절(gatekeeping)",
+      "급여의 화폐화",
+      "자발적 기여",
+      "바우처 수용"
+    ],
+    "a": 0,
+    "h": "문지기(gatekeeper)처럼 복지 제도 입구를 통제하는 행정적 절차입니다.",
+    "e": "정답: 0\n문지기 역할(gatekeeping)은 자산조사 기준, 까다로운 서류 증빙 등 복지 진입 장벽을 조절하여 예산 수급 인원을 제어하는 조절 기제입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지 급여 형태 중 현금, 현물, 바우처 외에 '기회(opportunity)'에 해당하는 예시는? [워크북 p.100]",
+    "o": [
+      "취약계층이나 장애인에 대한 의무고용제 및 대학 우선 입학권",
+      "매월 계좌로 입금되는 기초연금 현금",
+      "무상으로 지급되는 쌀과 연탄",
+      "보육시설 이용 바우처 카드"
+    ],
+    "a": 0,
+    "h": "제도적 장애물을 제거하고 접근이나 진출을 우대해 주는 권리성 혜택입니다.",
+    "e": "정답: 0\n'기회(opportunity)'는 사회적 불이익 계층에게 취업, 입학, 주택 분양 등에서 가산점이나 우선 배정권을 제공하여 경쟁에 참여할 수 있는 통로를 열어주는 급여입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지 급여 형태 중 '권력(power)'의 부여에 해당하는 예시는? [워크북 p.100]",
+    "o": [
+      "복지 기구의 의사결정 위원회에 수급자나 주민 대표를 위원으로 참여시키는 것",
+      "실업자에게 지급하는 구직급여",
+      "저소득층 아동에게 제공되는 급식 카드",
+      "노인 돌봄 서비스 이용권"
+    ],
+    "a": 0,
+    "h": "정책 결정 및 관리 과정에 직접 재량권과 투표권을 행사하도록 의결권을 주는 급여입니다.",
+    "e": "정답: 0\n'권력(power)' 급여는 지역사회 복지협의체, 사회복지법인 이사회 등에 수급자나 주민 대표의 의결 참여권을 보장하여 정책 결정 권한을 이전하는 급여 형태입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "현금급여(cash)의 장점에 대한 설명으로 옳지 않은 것은? [워크북 p.101]",
+    "o": [
+      "수급자의 소비 자유와 주체적 선택권을 존중한다.",
+      "운반, 보관, 분류 등 물류 행정비용이 거의 들지 않는다.",
+      "수급자가 복지 서비스를 이용한다는 사회적 낙인이 가장 적다.",
+      "수급자가 급여를 알코올이나 도박 등 부적절한 곳에 쓰는 오용을 완벽히 막아준다."
+    ],
+    "a": 3,
+    "h": "현금은 자유롭게 쓸 수 있는 만큼 정책 의도와 다른 곳에 오용될 위험이 있습니다.",
+    "e": "정답: 3\n현금급여는 선택의 자율성이 높은 반면, 일부 수급자가 목적 외(도박, 유흥 등)로 오용할 수 있어 정책 목표 달성 효율성(target efficiency)이 낮아질 우려가 있습니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "현물급여(in-kind)의 장점에 대한 설명으로 옳지 않은 것은? [워크북 p.101]",
+    "o": [
+      "영양 개선, 의료 치료 등 정부가 의도한 정책 목표를 정확히 달성할 수 있다.",
+      "식료품, 주택 등 대량 제공 시 대량 구매에 따른 '규모의 경제' 혜택을 얻는다.",
+      "수급자가 원하는 상품을 마음대로 자유롭게 바꾸어 소비할 수 있다.",
+      "사회적 가치재(merit goods)의 적정한 소비량을 확보해 준다."
+    ],
+    "a": 2,
+    "h": "원하는 상품으로 자유롭게 바꿀 수 없는 것이 현물급여의 단점입니다.",
+    "e": "정답: 2\n현물급여는 정부가 정한 물품이나 서비스만 받아야 하므로 수급자의 개별적 선호와 자유로운 소비 선택이 제약된다는 단점이 있습니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "증서/바우처(voucher) 급여의 주요 특징에 해당하지 않는 것은? [워크북 p.102]",
+    "o": [
+      "특정한 상품이나 서비스 품목으로 사용이 제한된다.",
+      "지정된 민간 및 공공 공급자들 중에서 수급자가 기관을 선택할 수 있다.",
+      "공급자 간의 성과 경쟁을 유도하여 서비스 질 향상을 도모할 수 있다.",
+      "현금과 완벽히 동일하여 어떤 시장 재화이든 조건 없이 자유롭게 구매할 수 있다."
+    ],
+    "a": 3,
+    "h": "조건 없이 현금처럼 자유 구매할 수 있는 것은 현금급여입니다.",
+    "e": "정답: 3\n증서(바우처)는 구매할 수 있는 재화/서비스 항목이 한정되어 있으며, 해당 품목 내에서 공급자(기관)를 선택할 수 있는 제한된 선택권을 줍니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "현물급여를 제공할 때 국가 입장에서 발생하는 주요 비용상의 한계는? [워크북 p.101]",
+    "o": [
+      "물품 수송, 창고 보관, 분배, 관리 등에 막대한 행정 관리비용(operating costs)이 소요된다.",
+      "현금 지급에 비해 은행 송금 수수료가 과다하게 발생한다.",
+      "국민들이 세금을 전혀 내지 않으려고 저항한다.",
+      "수급자가 현물을 시장에 전량 매각하여 인플레이션이 발생한다."
+    ],
+    "a": 0,
+    "h": "실제 물건을 구매, 저장, 배송하는 데 드는 부대 행정 절차 비용입니다.",
+    "e": "정답: 0\n현물급여는 쌀, 연탄, 임대주택 등 실물 자원을 조달·보관·운반·배분해야 하므로 단순 계좌 이체인 현금급여보다 운영 행정비용이 훨씬 많이 듭니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "수급권자가 급여를 지급받는 과정에서 겪는 '낙인(Stigma)'을 완화하기 위한 급여 형태의 순서(낙인이 적은 순)는? [워크북 p.102]",
+    "o": [
+      "현금급여 < 바우처(전자카드) < 현물급여",
+      "현물급여 < 바우처 < 현금급여",
+      "바우처 < 현물급여 < 현금급여",
+      "세 급여 형태의 낙인감은 완벽히 동일하다."
+    ],
+    "a": 0,
+    "h": "일반 돈과 구별되지 않는 현금이 낙인이 가장 적고, 실물 지급이 낙인이 가장 큽니다.",
+    "e": "정답: 0\n현금은 일반 화폐와 똑같아 낙인이 거의 없고, 전자카드 형태의 바우처는 낙인이 중간이며, 구호물자를 직접 받아 가는 현물급여는 시각적 낙인이 가장 큽니다."
+  },
+  {
+    "type": "사례적용",
+    "q": "한국의 '임신·출산 진료비 지원 국민행복카드'나 '에너지바우처'는 어떠한 급여 형태에 해당하는가? [워크북 p.102]",
+    "o": [
+      "증서/바우처(voucher)",
+      "현금급여",
+      "권력 부여",
+      "기회 제공"
+    ],
+    "a": 0,
+    "h": "정해진 목적(진료비, 난방비 등)으로 지정 기관에서 사용하는 전자카드입니다.",
+    "e": "정답: 0\n국민행복카드, 에너지바우처 등은 지정된 용도의 의료기관이나 에너지 공급업체에서 결제할 수 있도록 지원하는 바우처(증서) 급여입니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "급여의 적절성(adequacy) 원칙이 의미하는 바는? [워크북 p.103]",
+    "o": [
+      "제공되는 급여 수준이 수급자의 인간다운 기본 생활을 유지하기에 충분해야 한다.",
+      "급여를 수급자들에게 수학적으로 완벽히 똑같은 금액으로 나눠주어야 한다.",
+      "급여 제공에 들어가는 행정 예산을 최소화해야 한다.",
+      "모든 급여를 전액 외국의 기부금으로 충당해야 한다."
+    ],
+    "a": 0,
+    "h": "수급자의 욕구를 충족시키고 최저생활을 보장할 수 있는 충실한 수준입니다.",
+    "e": "정답: 0\n급여의 적절성은 혜택의 양과 수준이 건강하고 문화적인 최저생활을 유지하는 데 충분하고 적절해야 한다는 설계 원칙입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "급여 산정 방식 중 '다변적 급여(variable benefits)'의 특징은? [워크북 p.103]",
+    "o": [
+      "수급자의 소득, 가족 수, 지역 차이 등 개별 사정을 고려하여 금액을 달리 산정한다.",
+      "모든 국민에게 소득과 무관하게 똑같은 금액을 일률 지급한다.",
+      "전적으로 수급자의 주관적 기분에 따라 매일 금액을 바꾼다.",
+      "오직 과거에 납부한 세금 액수에만 비례하여 결정한다."
+    ],
+    "a": 0,
+    "h": "개인 및 가구의 욕구 차이와 가구원 수에 따라 맞춤형으로 지급액을 변경합니다.",
+    "e": "정답: 0\n다변적 급여는 개인과 가구의 소득 수준, 가구원 수, 장애 유무 등 개별적 사정에 맞춰 급여액을 차등 산정하여 정밀한 욕구 충족을 도모합니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "급여 산정 방식 중 '정액 급여(flat-rate benefits)'의 장점과 한계는? [워크북 p.103]",
+    "o": [
+      "행정 처리가 매우 간편하나, 개별 가구의 구체적 욕구 차이를 반영하지 못한다.",
+      "가구별 소득 조사가 완벽하게 정밀해진다.",
+      "수급자별 만족도가 최고 수준에 달한다.",
+      "모든 가난을 즉각 완벽히 퇴치한다."
+    ],
+    "a": 0,
+    "h": "동일 자격을 갖춘 사람에게 일률적으로 같은 액수를 주므로 행정이 단순합니다.",
+    "e": "정답: 0\n정액 급여는 조건 충족 시 모두에게 동일 금액을 주므로 산정과 행정이 간편하나, 가족 규모나 개별적 특별 욕구(질병 등)를 다 반영하지 못하는 한계가 있습니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "소득재분배 효과를 극대화하기 위해 급여액을 산정할 때 기초가 되는 '최저생계비' 또는 '기준 중위소득'의 역할은? [워크북 p.103]",
+    "o": [
+      "수급 자격 박탈 기준 및 보충급여 산정의 객관적 척도 제공",
+      "모든 국민의 세금을 일률적으로 2배 올리는 척도",
+      "민간 기업의 사원 임금을 강제 결정하는 기준",
+      "외국인 수출 관세를 매기는 수치"
+    ],
+    "a": 0,
+    "h": "빈곤선(poverty line)으로서 급여 수급 자격과 필요한 지원액을 결정합니다.",
+    "e": "정답: 0\n최저생계비나 기준 중위소득은 수급 자격 유무를 가르는 빈곤선이자, 가구 소득과의 차액(보충급여)을 계산하는 객관적 기준선 역할을 합니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "사회복지 급여로서 '현물급여'를 선호하는 정치적·경제적 주체는? [워크북 p.101]",
+    "o": [
+      "농산물 생산자, 납세자, 납세자 단체 및 관련 사업자",
+      "선택의 자율성을 극대화하려는 개별 수급자",
+      "아나키스트 시민운동가",
+      "모든 사설 금융회사"
+    ],
+    "a": 0,
+    "h": "자신의 생산물(쌀, 주택 등)이 복지 급여로 대량 구매되길 바라는 공급자 집단입니다.",
+    "e": "정답: 0\n현물급여는 농산물 생산자, 주택 건설 업자, 보육 시설 운영자 등 관련 생산자 및 관련 이익집단과, 수급자의 오용을 원치 않는 납세자층이 선호합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "수급권의 법적 성격 중 '조건부 수급권'이 의미하는 바는? [워크북 p.98]",
+    "o": [
+      "근로 유지, 자활사업 참여, 자녀 등교 등 지정된 의무 조건을 이행해야 급여를 제공하는 권리",
+      "아무런 조건 없이 신의 성실하게 살아가는 모든 자에게 주는 절대적 권리",
+      "국가가 재정이 남을 때만 임의로 시혜를 베푸는 비법률적 권리",
+      "외국 국적을 취득해야만 인정되는 예외적 권리"
+    ],
+    "a": 0,
+    "h": "근로 능력이 있는 복지 수급자에게 자활 참여 등의 의무를 조건으로 부과합니다.",
+    "e": "정답: 0\n조건부 수급권은 복지 의존(도덕적 해이)을 방지하기 위해 근로 능력자에 대해 자활사업 참여, 구직 활동 등 지정된 조건을 이행할 때만 급여권을 인정하는 방식입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "자산조사(Means Test)와 소득조사(Income Test)의 차이에 관한 설명으로 옳은 것은? [워크북 p.97]",
+    "o": [
+      "자산조사는 소득뿐만 아니라 부동산, 자동차, 금융자산 등 전체 재산을 종합 평가한다.",
+      "소득조사가 자산조사보다 훨씬 범위가 넓고 까다롭다.",
+      "자산조사는 오직 월급 명세서 하나만 제출받아 판정한다.",
+      "둘은 완전히 동일한 개념으로 차이가 전혀 없다."
+    ],
+    "a": 0,
+    "h": "자산조사는 단순 소득 외에도 부동산, 환산 재산, 금융자산 전체를 훑어봅니다.",
+    "e": "정답: 0\n소득 조사는 경상 소득 위주를 파악하는 반면, 자산조사(Means Test)는 소득은 물론 부동산, 금융 자산, 자동차, 부양의무자 재산까지 포함하여 종합 평가하므로 훨씬 엄격합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "자산조사 시 발생하는 '행정 비용(administrative costs)'의 특성은? [워크북 p.98]",
+    "o": [
+      "소득 및 재산 조사를 위한 인력, 전산망, 서류 검증 등으로 많은 비용이 소요된다.",
+      "보편주의 정책에 비해 행정 비용이 100% 절감된다.",
+      "전산화가 되면 행정 비용이 완벽히 0원이 된다.",
+      "수급자가 행정 비용 전액을 수수료로 국가에 납부한다."
+    ],
+    "a": 0,
+    "h": "수급 자격을 정밀하게 선별하고 검증하는 데 드는 공무원 인건비와 조사 비용입니다.",
+    "e": "정답: 0\n선별주의 자산조사는 금융 조회, 현장 조사, 서류 심사 등 정밀 검증에 많은 행정 인력과 수수료 등 상당한 행정 비용이 발생한다는 한계가 있습니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "길버트와 스펙트의 '보상' 원칙에 따라 수급 자격이 주어지는 대상으로 가장 적절한 것은? [워크북 p.97]",
+    "o": [
+      "국가 유공자, 참전 군인, 국가 재해 피해자",
+      "소득이 적은 모든 대학생",
+      "신규 창업을 원하는 청년 사업가",
+      "외국인 관광객"
+    ],
+    "a": 0,
+    "h": "국가나 사회를 위해 희생했거나 사회적 피해를 입은 집단입니다.",
+    "e": "정답: 0\n보상 원칙은 국가를 위한 특별한 희생(참전, 순직)이나 사회적 위험으로 인한 피해(산재, 진폐증 등)에 대해 공적 보상을 제공하는 할당 기준입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지 급여로서 '기회(opportunity)'가 지닌 독특한 성격은? [워크북 p.100]",
+    "o": [
+      "돈이나 물품을 직접 주지 않고, 진입이나 접근을 우대하는 제도를 제공한다.",
+      "매달 통장으로 현금을 입금해 준다.",
+      "식료품을 상자에 담아 배달해 준다.",
+      "정부 의사결정 기구의 위원장 자리를 박탈한다."
+    ],
+    "a": 0,
+    "h": "취업, 입학, 주택 우선권 등 경쟁에서의 제도적 접근 권한을 줍니다.",
+    "e": "정답: 0\n'기회' 급여는 실물이나 화폐 대신, 불이익 계층이 사회의 중요한 영역(고용, 교육, 주거 등)에 접근할 수 있도록 제도적 통로나 우선권을 부여하는 형태입니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "소비자 주권(Consumer Sovereignty) 관점에서 가장 높게 평가받는 급여 형태는? [워크북 p.101]",
+    "o": [
+      "현금급여",
+      "현물급여",
+      "증서/바우처",
+      "시설 수용"
+    ],
+    "a": 0,
+    "h": "소비자가 자신의 효용을 극대화하도록 시장 구매 선택권을 부여합니다.",
+    "e": "정답: 0\n소비자 주권 이론에 따르면 수급자 개인이 자신의 욕구와 선호를 가장 잘 알기 때문에, 제한 없이 소비할 수 있는 현금급여가 가장 우수한 급여로 평가받습니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "온정적 간섭주의(Paternalism) 관점에서 가장 높게 평가받는 급여 형태는? [워크북 p.101]",
+    "o": [
+      "현물급여 및 제한적 바우처",
+      "현금급여",
+      "조세 감면",
+      "주식 배당"
+    ],
+    "a": 0,
+    "h": "수급자가 잘못된 선택을 하지 않도록 국가가 올바른 재화(가치재)를 직접 지정해 줍니다.",
+    "e": "정답: 0\n온정적 간섭주의는 수급자가 현금을 받아 유흥에 탕진하는 등 부적절한 소비를 할 수 있다고 보아, 국가가 영양, 보건, 주거 등 필수 재화(현물/바우처)를 지정해 주는 것을 선호합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "다음 중 사회복지 수급 자격 할당에서 '인구학적 조건(demographic criteria)'만을 기준으로 삼는 제도는? [워크북 p.97]",
+    "o": [
+      "소득과 상관없이 모든 0~5세 아동에게 제공되는 무상보육",
+      "소득 재산 조사를 거치는 기초생활보장 생계급여",
+      "의사의 진단서가 필요한 장애인연금",
+      "산업재해 판정을 받은 근로자의 요양급여"
+    ],
+    "a": 0,
+    "h": "연령 조건(0~5세)에 해당하는 모든 아동에게 자격을 할당합니다.",
+    "e": "정답: 0\n특정 연령대(0~5세)라는 인구학적 조건에 해당하면 소득·재산과 상관없이 누구에게나 자격을 부여하는 귀속적 욕구(보평주의)의 대표적 예입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "현물급여와 비교할 때 '바우처(Voucher)'가 갖는 차별적 장점은? [워크북 p.102]",
+    "o": [
+      "정부가 일괄 지급하는 단일 서비스 대신, 수급자가 민간/공공 공급자를 선택할 수 있다.",
+      "어디서나 현금으로 즉시 환전하여 도박에 쓸 수 있다.",
+      "행정 관리비용이 전면 면제된다.",
+      "수급 자격 조사를 전혀 하지 않는다."
+    ],
+    "a": 0,
+    "h": "공급자 간의 경쟁을 유도하고 이용자의 서비스 기관 선택권을 보장합니다.",
+    "e": "정답: 0\n바우처는 현물급여와 달리 수급자에게 공급자(기관) 선택권을 부여하므로, 공급자 간 경쟁을 유도하여 서비스의 질을 높일 수 있습니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "사회복지 급여 설계 시 '목표효율성(target efficiency)'의 개념은? [워크북 p.98]",
+    "o": [
+      "투입된 복지 자원이 진짜 도움이 필요한 표적 집단(빈곤층)에게 얼마나 정확히 집중되었는가",
+      "복지 행정업무를 처리하는 공무원의 일처리 속도가 얼마나 빠르는가",
+      "모든 국민에게 똑같은 금액을 나눠주는 속도가 얼마나 빠른가",
+      "복지 예산을 남겨서 국고로 반납한 비율이 얼마나 되는가"
+    ],
+    "a": 0,
+    "h": "지원금이 원래 도우려 했던 표적 대상에게 낭비 없이 도달했는지의 비율입니다.",
+    "e": "정답: 0\n목표효율성(target efficiency)은 복지 급여 예산이 비대상자에게 샐 유출(leakage) 없이 원래의 표적 대상자에게 얼마나 집중적으로 전달되었는가를 나타냅니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지 급여 설계 시 '운영효율성(operating efficiency)'의 개념은? [워크북 p.98]",
+    "o": [
+      "급여를 제공하는 데 드는 행정 비용 및 집행 비용을 얼마나 절감하였는가",
+      "빈곤층의 수가 얼마나 대폭 줄어들었는가",
+      "수급자의 행복 지수가 얼마나 높아졌는가",
+      "국회의원들의 입법 만족도가 얼마나 높은가"
+    ],
+    "a": 0,
+    "h": "제도를 집행하고 관리하는 데 드는 행정비용 절감 효율성입니다.",
+    "e": "정답: 0\n운영효율성(operating efficiency)은 복지 급여 제도를 절차적으로 운영하고 집행하는 데 소비되는 행정 관리 비용을 얼마나 적게 들였는가를 의미합니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "목표효율성과 운영효율성의 관계에 대한 설명으로 옳은 것은? [워크북 p.98]",
+    "o": [
+      "자산조사를 통해 목표효율성을 높이려 하면, 조사 행정비용이 증가하여 운영효율성은 낮아진다.",
+      "목표효율성과 운영효율성은 언제나 항상 완벽하게 비례하여 함께 증가한다.",
+      "보평주의를 채택하면 목표효율성이 최고조에 달한다.",
+      "두 효율성은 상호 영향을 주지 않는 별개의 개념이다."
+    ],
+    "a": 0,
+    "h": "표적화를 정밀하게 하려고 검증 비용을 쓰면 행정 비용이 늘어 상충 관계(trade-off)가 발생합니다.",
+    "e": "정답: 0\n선별주의 자산조사는 목표효율성을 높여주지만, 정밀 조사에 드는 행정비용(운영효율성 저하)을 증가시키므로 두 효율성은 대체로 상충 관계(상호 상쇄)에 있습니다."
+  },
+  {
+    "type": "사례적용",
+    "q": "저소득층 학생에게 현금 대신 '꿈나무 카드(급식 바우처)'를 지급하여 지정 식당에서 밥을 먹게 하는 정책의 주된 명분은? [워크북 p.102]",
+    "o": [
+      "급여기금이 부모의 타 용도(유흥 등)로 오용되는 것을 막고 아동의 영양을 직접 보장하기 위함",
+      "학생들에게 심각한 사회적 낙인을 부여하기 위함",
+      "카드 발급 업체의 이윤을 극대화하기 위함",
+      "현금 송금 수수료를 아끼기 위함"
+    ],
+    "a": 0,
+    "h": "아동의 식사 제공이라는 본래 정책 목적 달성을 확정하기 위한 바우처 활용입니다.",
+    "e": "정답: 0\n아동 급식 바우처는 현금 제공 시 부모가 타 용도로 오용할 위험을 방지하고, 아동의 영양 섭취라는 정책 목적을 확실히 달성하기 위해 사용을 제한하는 예입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "길버트와 테렐의 급여 형태 분류 6가지에 해당하지 않는 것은? [워크북 p.100]",
+    "o": [
+      "현금, 현물, 증서(바우처)",
+      "기회, 권력, 신용(credit)",
+      "주식, 금괴, 암호화폐",
+      "현금, 현물, 기회"
+    ],
+    "a": 2,
+    "h": "길버트와 테렐은 급여를 현금, 현물, 증서, 기회, 권력, 신용으로 분류했습니다.",
+    "e": "정답: 2\n길버트와 테렐(Gilbert & Terrell)이 제시한 6대 급여 형태는 현금, 현물, 증서(바우처), 기회, 권력, 신용(개별적 대출 및 융자 혜택)입니다. 주식, 금괴 등은 포함되지 않습니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "할당 원칙 중 과거 조세 납부나 사회보험료 납부실적에 따라 급여 권리를 인정해 주는 것은? [워크북 p.97]",
+    "o": [
+      "보상(compensation) 및 기여에 바탕을 둔 권리",
+      "자산조사적 욕구",
+      "진단적 구체성",
+      "무조건적 귀속"
+    ],
+    "a": 0,
+    "h": "사회보험처럼 본인의 기여(보험료 납부)실적을 근거로 수급권을 인정합니다.",
+    "e": "정답: 0\n사회보험의 수급 자격은 가입 기간 동안 납부한 기여금(보험료)에 대한 보상 및 기여 원칙에 바탕을 두고 당당한 사회적 권리로 인정됩니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "수급 자격을 결정할 때 '부양의무자 기준'을 엄격하게 적용하는 것이 가져오는 부작용은? [워크북 p.98]",
+    "o": [
+      "실제 가난하지만 서류상 부양의무자가 있어 혜택을 못 받는 '비수급 빈곤층(사각지대)' 발생",
+      "국가 복지 예산의 과도한 팽창과 낭비",
+      "모든 부양의무자의 자발적 부양 열의 폭발",
+      "복지전담공무원의 업무 전면 중단"
+    ],
+    "a": 0,
+    "h": "부양 능력이 없거나 단절된 부양의무자 때문에 수급에서 탈락하는 비극입니다.",
+    "e": "정답: 0\n부양의무자 기준의 엄격한 적용은 실제 관계가 단절되었거나 부양 능력이 없는 가족이 존재한다는 이유로 수급자에서 탈락하는 심각한 복지 사각지대를 발생시킵니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "보편주의 정책과 선별주의 정책의 정치적 지지기반 차이에 대한 설명으로 옳은 것은? [워크북 p.98]",
+    "o": [
+      "보편주의는 중산층을 포함한 광범위한 국민적 지지를 얻어 정당성이 높다.",
+      "선별주의는 고소득층과 중산층이 적극 환영하여 항상 정치적 지지가 높다.",
+      "보편주의는 수급자가 저소득층에 한정되므로 지지기반이 매우 약하다.",
+      "둘의 정치적 지지기반은 완전히 동일하다."
+    ],
+    "a": 0,
+    "h": "자신도 혜택을 받는 중산층이 보편주의 복지를 지속적으로 지지합니다.",
+    "e": "정답: 0\n보편주의 정책은 중산층도 혜택을 누리므로 조세 부담에 대한 저항이 적고 정치적 지지기반이 공고한 반면, 선별주의는 중산층이 조세 부담만 지므로 정치적 지지가 약해질 수 있습니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "사회복지 급여 형태 중 '신용(credit)'에 해당하는 혜택의 예시는? [워크북 p.100]",
+    "o": [
+      "저소득층 학자금 저리 융자 및 저소득 가구 주택 마련 대출 혜택",
+      "매달 지급되는 생계비 현금",
+      "무상으로 나누어주는 쌀",
+      "노숙인 쉼터 제공"
+    ],
+    "a": 0,
+    "h": "일반 금융 시장에서 대출이 어려운 서민에게 정부가 저리로 대출받을 수 있게 해주는 금융 혜택입니다.",
+    "e": "정답: 0\n'신용(credit)' 급여는 보증이나 신용도가 부족한 저소득층에게 정부가 저금리로 자금을 대출해 주거나 융자 보증을 제공하는 금융상 복지 급여입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "할당 기준 중 '진단적 구체성'을 적용하는 대표적인 사회복지 제도는? [워크북 p.97]",
+    "o": [
+      "노인장기요양보험의 등급 판정 및 장애인 등록 심사",
+      "모든 국민 대상 1인당 25만원 재난지원금",
+      "근로장려세제(EITC)",
+      "국민연금 반환일시금"
+    ],
+    "a": 0,
+    "h": "의사 및 전문 심사위원회의 정밀 진단과 등급 판정이 필수적인 제도입니다.",
+    "e": "정답: 0\n노인장기요양보험 등급 판정이나 장애 등급 심사는 의사 진단서, 현장 조사 판정 등 전문적 '진단적 구체성'을 기준으로 수급 자격을 결정합니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "다음 중 수급 자격 할당이 가장 엄격하고 좁은 제도부터 넓은 제도 순으로 올바르게 나열된 것은? [워크북 p.98]",
+    "o": [
+      "국민기초생활보장(자산조사) ➔ 국민연금(기여/보상) ➔ 아동수당(귀속적 욕구/보편)",
+      "아동수당 ➔ 국민연금 ➔ 국민기초생활보장",
+      "국민연금 ➔ 아동수당 ➔ 국민기초생활보장",
+      "세 제도의 수급 자격 할당 범위는 완벽히 동일하다."
+    ],
+    "a": 0,
+    "h": "선별주의(자산조사)가 가장 좁고, 보편주의(인구학적 조건)가 가장 넓습니다.",
+    "e": "정답: 0\n자산조사를 거치는 국민기초생활보장이 가장 좁은 할당(선별주의)을 적용하고, 기여금 납부와 연령을 보는 국민연금이 중간이며, 대상 연령 전체에 주는 아동수당이 가장 넓은 할당(보편주의)을 적용합니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "사회복지 급여 설계 시 고려해야 할 '가치 갈등'의 구조에 대한 설명으로 옳은 것은? [워크북 p.104]",
+    "o": [
+      "수급자의 선택 자율성(현금)과 정책 목표 달성의 효율성(현물)은 서로 상충하기 쉽다.",
+      "모든 사회복지 가치는 아무런 상충 없이 100% 동시에 달성된다.",
+      "보편주의를 채택하면 목표효율성이 세계 최고 수준이 된다.",
+      "자산조사를 강화할수록 수급자의 인간적 자존감이 극대화된다."
+    ],
+    "a": 0,
+    "h": "자율성을 주면 목표 효율성이 떨어지고, 목표를 강제하면 자율성이 손상됩니다.",
+    "e": "정답: 0\n사회복지정책 설계는 수급자의 자율성(현금)과 국가의 목표효율성(현물), 평등(보편주의)과 대상 효율성(선별주의) 간의 끊임없는 가치 상충과 타협의 과정입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "다음 중 '사회복지정책의 설계' 차원에서 대상자(할당)와 급여 형태를 바르게 짝지은 것은? [워크북 p.105]",
+    "o": [
+      "국민기초생활보장: 자산조사적 욕구 대상 - 현금 및 주거·의료급여 제공",
+      "아동수당: 자산조사 대상 - 주택 실물 현물 제공",
+      "국민건강보험: 귀속적 욕구 대상 - 전액 현금만 지급",
+      "장애인연금: 소득 상위 1% 대상 - 기회 급여만 제공"
+    ],
+    "a": 0,
+    "h": "국민기초생활보장제도는 자산조사로 대상을 뽑아 현금(생계급여)과 현물/바우처를 줍니다.",
+    "e": "정답: 0\n국민기초생활보장제도는 자산조사를 통과한 가구를 대상으로 생계급여(현금), 의료급여(현물/서비스), 주거급여(현금/바우처) 등을 종합 설계하여 제공합니다."
+        }
+    ];</script>
+
+<!-- ④ 프로그램 본체: 수정하지 마세요. -->
+<script>
+    var allQuestions = [];   // 검사를 통과한 전체 문제
+    var questions = [];      // 지금 풀고 있는 문제 묶음(전체 또는 틀린 문제)
+    var curIdx = 0;
+    var wrongCount = 0;      // 현재 문제에서 틀린 횟수
+    var correctFirst = 0;    // 이번 회차에서 한 번에 맞힌 문제 수
+    var missed = [];         // 이번 회차에서 한 번이라도 틀린 문제
+
+    document.title = '사회복지정책론 퀴즈 [제' + LECTURE.no + '장]';
+    document.getElementById('lecture-title').textContent = '제' + LECTURE.no + '장: ' + LECTURE.title;
+
+    /* ---------- 데이터 검사 ---------- */
+    function validateQuizData(data) {
+        var errors = [];
+        var warnings = [];
+        var valid = [];
+
+        if (!Array.isArray(data) || data.length === 0) {
+            errors.push({ tag: '전체', text: 'quizData가 비어 있거나 배열([ ])이 아닙니다.' });
+            return { errors: errors, warnings: warnings, valid: valid };
+        }
+
+        data.forEach(function (item, i) {
+            var tag = 'Q' + (i + 1);
+            var problems = [];
+
+            if (!item || typeof item !== 'object') {
+                problems.push('문제가 { } 형식이 아닙니다.');
+            } else {
+                if (typeof item.q !== 'string' || !item.q.trim()) {
+                    problems.push('q(질문)가 없거나 비어 있습니다.');
+                }
+
+                var oOk = Array.isArray(item.o);
+                if (!oOk) {
+                    problems.push('o(보기)가 배열([ ])이 아닙니다.');
+                } else {
+                    if (item.o.length < 2) {
+                        problems.push('보기가 ' + item.o.length + '개뿐입니다. 2개 이상 필요합니다.');
+                    }
+                    var bad = item.o.some(function (x) { return typeof x !== 'string' || !x.trim(); });
+                    if (bad) {
+                        problems.push('보기 중에 비어 있거나 글자가 아닌 항목이 있습니다.');
+                    } else {
+                        var uniq = {};
+                        item.o.forEach(function (x) { uniq[x.trim()] = true; });
+                        if (Object.keys(uniq).length !== item.o.length) {
+                            problems.push('똑같은 보기가 2개 이상 있습니다.');
+                        }
+                    }
+                }
+
+                if (typeof item.a === 'string') {
+                    problems.push('a(정답 번호)가 따옴표로 감싸져 있습니다("' + item.a + '"). 따옴표 없는 숫자로 바꾸세요.');
+                } else if (!Number.isInteger(item.a)) {
+                    problems.push('a(정답 번호)가 없거나 숫자가 아닙니다.');
+                } else if (oOk && (item.a < 0 || item.a >= item.o.length)) {
+                    if (item.a === item.o.length) {
+                        problems.push('a가 ' + item.a + '입니다. 번호는 0부터 세므로 보기가 ' + item.o.length + '개면 0~' + (item.o.length - 1) + ' 중 하나여야 합니다. 1부터 센 것 같아요(' + item.a + ' → ' + (item.a - 1) + ').');
+                    } else {
+                        problems.push('a가 ' + item.a + '로 보기 범위(0~' + (item.o.length - 1) + ')를 벗어났습니다.');
+                    }
+                }
+
+                if (typeof item.h !== 'string' || !item.h.trim()) {
+                    problems.push('h(힌트)가 없거나 비어 있습니다.');
+                }
+                if (typeof item.e !== 'string' || !item.e.trim()) {
+                    problems.push('e(해설)가 없거나 비어 있습니다.');
+                }
+            }
+
+            if (problems.length) {
+                problems.forEach(function (t) { errors.push({ tag: tag, text: t }); });
+            } else {
+                valid.push(item);
+            }
+        });
+
+        
+
+        return { errors: errors, warnings: warnings, valid: valid };
+    }
+
+    /* ---------- 검사 결과 화면 ---------- */
+    function showProblemScreen(opts) {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('problem-screen').style.display = 'block';
+        document.getElementById('problem-title').textContent = opts.title;
+        document.getElementById('problem-summary').textContent = opts.summary;
+
+        var list = document.getElementById('problem-list');
+        list.innerHTML = '';
+        opts.items.forEach(function (it) {
+            var li = document.createElement('li');
+            if (it.warn) li.className = 'warn';
+            var tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = it.tag;
+            var txt = document.createElement('span');
+            txt.textContent = it.text;
+            li.appendChild(tag);
+            li.appendChild(txt);
+            list.appendChild(li);
+        });
+
+        var tips = document.getElementById('problem-tips');
+        tips.innerHTML = '';
+        if (opts.tips && opts.tips.length) {
+            tips.appendChild(document.createTextNode('자주 생기는 원인'));
+            var ul = document.createElement('ul');
+            opts.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                ul.appendChild(li);
+            });
+            tips.appendChild(ul);
+            tips.style.display = 'block';
+        } else {
+            tips.style.display = 'none';
+        }
+
+        var btn = document.getElementById('partial-btn');
+        if (opts.buttonText) {
+            btn.textContent = opts.buttonText;
+            btn.style.display = 'block';
+            btn.onclick = opts.onButton;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function startQuiz(list) {
+        allQuestions = list;
+        document.getElementById('problem-screen').style.display = 'none';
+        beginRound(list);
+    }
+
+    // 한 회차 시작: 전체 문제 또는 틀린 문제만 받아서 처음부터 진행
+    function beginRound(list) {
+        questions = list;
+        curIdx = 0;
+        correctFirst = 0;
+        missed = [];
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        loadQuestion();
+    }
+
+    function init() {
+        // 데이터 문법 오류: ③ 블록이 아예 실행되지 못한 경우
+        if (typeof quizData === 'undefined') {
+            var items = window.__dataErrors.map(function (er) {
+                return { tag: er.line ? ('약 ' + er.line + '줄') : '오류', text: er.msg };
+            });
+            if (!items.length) items.push({ tag: '오류', text: 'quizData를 찾을 수 없습니다. const quizData = [ ... ]; 형태가 맞는지 확인하세요.' });
+            showProblemScreen({
+                title: '⚠️ 퀴즈 데이터를 읽지 못했어요',
+                summary: '데이터 부분에 문법 오류가 있어서 프로그램이 멈췄습니다. 아래 줄 근처를 확인하세요.',
+                items: items,
+                tips: [
+                    '문장 안에 큰따옴표(")가 들어 있음 → 작은따옴표(\')로 바꾸기',
+                    '문제와 문제 사이 쉼표(,) 빠짐, 또는 맨 끝의 ]; 가 지워짐',
+                    '문장 한가운데에서 줄이 바뀜 (한 문장은 한 줄로)',
+                    '붙여넣은 글에 // 가 포함되어 뒷부분이 주석 처리됨'
+                ]
+            });
+            return;
+        }
+
+        var result = validateQuizData(quizData);
+
+        if (result.errors.length === 0 && result.warnings.length === 0) {
+            startQuiz(result.valid);
+            return;
+        }
+
+        var items = result.errors.map(function (er) { return { tag: er.tag, text: er.text }; })
+            .concat(result.warnings.map(function (w) { return { tag: w.tag, text: w.text, warn: true }; }));
+
+        var badCount = (Array.isArray(quizData) ? quizData.length : 0) - result.valid.length;
+        var hasErrors = result.errors.length > 0;
+
+        showProblemScreen({
+            title: hasErrors ? '⚠️ 고칠 곳이 ' + result.errors.length + '군데 있어요' : '확인해 볼 곳이 있어요',
+            summary: !hasErrors
+                ? '오류는 아니지만 한 번 확인해 보세요.'
+                : (badCount > 0
+                    ? '전체 ' + quizData.length + '문제 중 ' + badCount + '문제에 문제가 있습니다. 데이터를 고치고 새로고침하세요.'
+                    : '퀴즈 데이터를 확인하고 새로고침하세요.'),
+            items: items,
+            tips: hasErrors ? [
+                '정답 번호 a는 따옴표 없는 숫자이고, 첫 번째 보기가 0입니다',
+                '문제마다 type, q, o, a, h, e 가 모두 있어야 합니다'
+            ] : null,
+            buttonText: result.valid.length > 0
+                ? (hasErrors ? '오류 없는 ' + result.valid.length + '문제만 먼저 풀기' : '그대로 시작하기')
+                : null,
+            onButton: function () { startQuiz(result.valid); }
+        });
+    }
+
+    /* ---------- 퀴즈 진행 ---------- */
+    function loadQuestion() {
+        wrongCount = 0;
+        var q = questions[curIdx];
+
+        document.getElementById('progress-text').textContent = (curIdx + 1) + ' / ' + questions.length;
+        updateScore();
+        window.scrollTo(0, 0);
+        document.getElementById('question-type').textContent = q.type || '일반문제';
+        document.getElementById('question-text').textContent = 'Q' + (allQuestions.indexOf(q) + 1) + '. ' + q.q;
+
+        var container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach(function (opt, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = function () { checkAnswer(idx, btn); };
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        var q = questions[curIdx];
+        var allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            btn.classList.add('correct');
+            allBtns.forEach(function (b) { b.style.pointerEvents = 'none'; });
+            if (wrongCount === 0) { correctFirst++; updateScore(); }
+            showExplanation();
+        } else {
+            wrongCount++;
+            if (wrongCount === 1) missed.push(q);
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                document.getElementById('hint-text').textContent = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(function (b) { b.style.pointerEvents = 'none'; });
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        var q = questions[curIdx];
+        document.getElementById('exp-text').textContent = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    // 풀던 중에 누르면 한 번 물어봅니다. (묻지 않으려면 if 문 세 줄을 지우세요)
+    function goList() {
+        if (curIdx > 0 && !confirm('퀴즈를 그만하고 목록으로 갈까요?\n지금까지 푼 기록은 저장되지 않아요.')) return;
+        location.href = 'index.html';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < questions.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    /* ---------- 점수와 다시 풀기 ---------- */
+    // 한 번에 맞힌 문제만 점수로 셉니다. (힌트를 본 뒤 맞히면 점수에 넣지 않아요)
+    function updateScore() {
+        document.getElementById('score-text').textContent = '한 번에 맞힌 문제 ' + correctFirst + '개';
+    }
+
+    function showResult() {
+        var total = questions.length;
+        var score = Math.round(correctFirst / total * 100);
+        var isRetry = total < allQuestions.length;
+
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+
+        document.getElementById('result-title').textContent = isRetry ? '🔁 틀린 문제 복습을 마쳤습니다!' : '🎊 학습을 마쳤습니다!';
+        document.getElementById('result-score').textContent = score + '점';
+        document.getElementById('result-detail').textContent =
+            (isRetry ? '복습한 ' : '전체 ') + total + '문제 중 한 번에 맞힌 문제 ' + correctFirst + '개 (100점 만점)';
+
+        var msg;
+        if (score >= 90) msg = '진짜 수고 많이 하셨습니다, 학우님! A+ 당근 🥕';
+        else if (score >= 70) msg = '잘하고 계세요! 틀린 문제만 한 번 더 풀면 더 단단해져요.';
+        else msg = '괜찮아요. 틀린 문제를 해설과 함께 다시 풀어 보면 금방 늘어요.';
+        document.getElementById('result-msg').textContent = msg;
+
+        var details = document.getElementById('missed-details');
+        var list = document.getElementById('missed-list');
+        list.innerHTML = '';
+        missed.forEach(function (m) {
+            var li = document.createElement('li');
+            li.value = allQuestions.indexOf(m) + 1;
+            li.textContent = m.q;
+            list.appendChild(li);
+        });
+        details.open = false;
+        details.style.display = missed.length ? 'block' : 'none';
+        document.getElementById('missed-summary').textContent = '이번에 틀린 문제 ' + missed.length + '개 보기';
+
+        var retryBtn = document.getElementById('retry-missed-btn');
+        retryBtn.textContent = '❌ 틀린 문제만 다시 풀기 (' + missed.length + '문제)';
+        retryBtn.style.display = missed.length ? 'block' : 'none';
+
+        window.scrollTo(0, 0);
+    }
+
+    function retryAll() { beginRound(allQuestions); }
+    function retryMissed() { if (missed.length) beginRound(missed.slice()); }
+
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지 정책론 학습장</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root {
+        --ink: #14213d;
+        --muted: #55657d;
+        --paper: #f3f6fa;
+        --rule: #d5deea;
+        --c-card: #1f6b46;
+        --c-quiz: #b45309;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+        margin: 0;
+        font-family: 'Pretendard', -apple-system, 'Noto Sans KR', sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.5;
+        word-break: keep-all;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* 머리말 */
+    .hero { padding: 56px 0 8px; }
+    h1 {
+        margin: 0 0 16px;
+        font-size: clamp(2.1rem, 6vw, 3.6rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+    }
+    .lead { margin: 0; color: var(--muted); font-size: 1.1rem; max-width: 26em; }
+
+    /* 장 목록 */
+    .part { margin-top: 40px; }
+    .part-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--ink);
+    }
+    .part-head h2 { margin: 0; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; }
+    .part-head .range { color: var(--muted); font-size: 0.95rem; }
+    .list { list-style: none; margin: 0; padding: 0; }
+    .lec {
+        display: grid;
+        grid-template-columns: 3rem 1fr auto;
+        gap: 6px 12px;
+        align-items: center;
+        padding: 14px 8px;
+        border-bottom: 1px solid var(--rule);
+    }
+    .lec:hover { background: #fff; }
+    .n { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.05rem; color: var(--muted); }
+    .t { margin: 0; font-size: 1.08rem; font-weight: 650; }
+    .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 40px;
+        padding: 0 14px;
+        border: 1.5px solid var(--c);
+        border-radius: 8px;
+        color: var(--c);
+        font-size: 0.92rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .15s, color .15s;
+    }
+    .a:hover { background: var(--c); color: #fff; }
+    .a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+    .a.card { --c: var(--c-card); }
+    .a.quiz { --c: var(--c-quiz); }
+
+    footer { margin-top: 56px; padding-top: 24px; padding-bottom: 56px; border-top: 1px solid var(--rule); color: var(--muted); }
+    footer .motto { margin: 0 0 6px; color: var(--ink); font-size: 1.3rem; font-weight: 800; }
+    footer .credit { margin: 0; font-size: 0.92rem; }
+
+    @media (max-width: 680px) {
+        .wrap { padding: 0 18px; }
+        .hero { padding: 36px 0 4px; }
+        .lec { grid-template-columns: 2.4rem 1fr; padding: 14px 4px; }
+        .acts { grid-column: 2; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .a { transition: none; }
+    }
+</style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="wrap">
+        <h1>사회복지 정책론 학습</h1>
+        <p class="lead">사회복지 정책론 학습을 향한 10단계 여정</p>
+    </div>
+</header>
+
+<main class="wrap" id="parts"></main>
+
+<footer class="wrap">
+    <p class="motto">"치킨이냐? 전장이냐? 그것이 문제로다!"</p>
+    <p class="credit">만든이: 유승욱 (다른 곳에 공유하기 없기!)<br>도우미: 클로드, 쳇지피티, 제미나이, 노트북 L.M., 젠스파크</p>
+</footer>
+
+<script>
+    // 장 번호(6~15) 순서대로 제목을 적었습니다.
+    const chapters = {
+         6: "사회복지정책 의제 및 대안의 형성",
+         7: "사회복지정책의 결정, 집행 및 평가",
+         8: "사회복지정책의 재원 및 경제적 효과",
+         9: "사회복지정책의 설계: 할당 및 급여",
+        10: "사회적 위험과 사회보장",
+        11: "빈곤과 사회보장",
+        12: "사회보험",
+        13: "사회서비스",
+        14: "한국 사회복지정책의 역사, 현황과 쟁점",
+        15: "사회복지정책 실천과 사회운동"
+    };
+
+    // 묶음을 바꾸고 싶으면 이름과 from/to(장 번호)만 고치세요.
+    const parts = [
+        { name: "사회복지정책 과정론", from: 6,  to: 7 },
+        { name: "사회복지정책 분석론", from: 8,  to: 9 },
+        { name: "사회보장론",         from: 10, to: 15 }
+    ];
+
+    // 파일 이름 앞부분: policy_card_06.html, policy_quiz_06.html 형태
+    const prefix = "social_welfare_policy";
+
+    const root = document.getElementById('parts');
+
+    parts.forEach(part => {
+        const section = document.createElement('section');
+        section.className = 'part';
+        section.innerHTML = `<div class="part-head"><h2>${part.name}</h2><span class="range">${part.from}~${part.to}장</span></div>`;
+
+        const list = document.createElement('ol');
+        list.className = 'list';
+
+        for (let n = part.from; n <= part.to; n++) {
+            const f = String(n).padStart(2, '0');
+            const li = document.createElement('li');
+            li.className = 'lec';
+            li.innerHTML =
+                `<span class="n">${f}</span>` +
+                `<h3 class="t">${chapters[n]}</h3>` +
+                `<div class="acts">` +
+                    `<a class="a card" href="${prefix}_card_${f}.html">플래시카드</a>` +
+                    `<a class="a quiz" href="${prefix}_quiz_${f}.html">퀴즈 풀기</a>` +
+                `</div>`;
+            list.appendChild(li);
+        }
+
+        section.appendChild(list);
+        root.appendChild(section);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지정책론 플래시카드</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* 눈이 편한 차분한 초록 계열 (index.html의 플래시카드 색과 맞춤) */
+    body {
+        font-family: 'Pretendard', sans-serif;
+        background: linear-gradient(135deg, #2f7d5b 0%, #1b4332 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .container { width: 100%; max-width: 850px; margin: auto; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+    .header { text-align: center; color: white; margin-bottom: 20px; }
+    .header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+    .header .sub { font-size: 1.05rem; font-weight: 600; opacity: 0.92; margin-bottom: 10px; word-break: keep-all; }
+    .header .count { font-size: 1.1rem; font-weight: 700; }
+    .progress { max-width: 340px; height: 6px; margin: 12px auto 0; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+    #bar { height: 100%; width: 0; background: white; border-radius: 3px; transition: width 0.3s; }
+
+    /* 카드 */
+    .stage { perspective: 1400px; margin: 12px 0; }
+    .card {
+        position: relative;
+        width: 100%;
+        height: min(460px, 60vh);
+        height: min(460px, 60dvh);
+        min-height: 320px;
+        cursor: pointer;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card:focus-visible { outline: 3px solid #fde68a; outline-offset: 4px; }
+
+    .side {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 26px 18px;
+        border-radius: 20px;
+        overflow-y: auto;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        word-break: keep-all;
+        white-space: pre-line;
+    }
+    .front { background: white; color: #1e293b; }
+    .back { background: #f0f7f2; color: #1b4332; transform: rotateY(180deg); }
+
+    .meta { display: flex; align-items: center; justify-content: space-between; min-height: 28px; white-space: normal; }
+    .chip { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; }
+    .chip-q { background: #f1f5f9; color: #475569; }
+    .chip-a { background: #cfe8d8; color: #1b4332; }
+    .stars { font-size: 0.95rem; font-weight: 800; color: #1f6b46; background: #e3f1e8; padding: 3px 10px; border-radius: 20px; display: none; }
+
+    /* 내용이 길어도 위쪽이 잘리지 않도록 margin:auto로 가운데 맞춤 */
+    .body { margin: auto; padding: 14px 0; text-align: center; font-size: 1.4rem; font-weight: 700; line-height: 1.55; }
+    .back .body { font-size: 1.55rem; font-weight: 800; }
+    .src { min-height: 1.2em; text-align: center; font-size: 0.85rem; color: #64748b; white-space: normal; }
+
+    .tip { text-align: center; color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 4px 0 14px; word-break: keep-all; }
+
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; }
+    .btn { padding: 18px 10px; border: none; border-radius: 12px; background: white; color: #1f6b46; font-family: inherit; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn:hover { background: #f1f5f9; transform: translateY(-2px); }
+    .btn:focus-visible { outline: 3px solid #fde68a; outline-offset: 2px; }
+
+    /* 데이터 검사 결과 화면 */
+    .problem-card { display: none; background: white; border-radius: 15px; padding: 28px; border-left: 6px solid #dc3545; box-shadow: 0 10px 30px rgba(0,0,0,0.25); color: #1e293b; }
+    .problem-card h2 { margin: 0 0 8px; font-size: 1.3rem; }
+    .problem-card .summary { margin: 0 0 16px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    .problem-list { list-style: none; margin: 0 0 8px; padding: 0; }
+    .problem-list li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #e0e7f1; line-height: 1.5; word-break: keep-all; }
+    .problem-list .tag { flex: none; min-width: 3.2rem; font-weight: 800; color: #dc3545; }
+    .problem-card .tips { margin: 12px 0 0; padding: 14px; background: #f3f6fa; border-radius: 10px; font-size: 0.92rem; line-height: 1.6; color: #2f3640; word-break: keep-all; }
+    .problem-card .tips ul { margin: 6px 0 0; padding-left: 20px; }
+    #partial-btn { width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 10px; background: #2e7d5b; color: white; font-weight: bold; font-size: 1.05rem; cursor: pointer; font-family: inherit; }
+    #partial-btn:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+
+    @media (max-width: 600px) {
+        body { padding: 14px; }
+        .header h1 { font-size: 1.6rem; }
+        .side { padding: 16px 18px 14px; }
+        .body { font-size: 1.2rem; }
+        .back .body { font-size: 1.3rem; }
+        .controls { grid-template-columns: 1fr 1fr; }
+        .controls .btn-list { grid-column: 1 / -1; }
+        .btn { padding: 16px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .card, #bar, .btn { transition: none; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="problem-screen" class="problem-card" role="alert">
+        <h2 id="problem-title"></h2>
+        <p id="problem-summary" class="summary"></p>
+        <ul id="problem-list" class="problem-list"></ul>
+        <div id="problem-tips" class="tips"></div>
+        <button id="partial-btn" type="button"></button>
+    </div>
+
+    <div id="card-screen">
+        <div class="header">
+            <h1 id="page-title">플래시카드</h1>
+            <p class="sub" id="page-sub"></p>
+            <p class="count"><span id="current">1</span> / <span id="total">0</span></p>
+            <div class="progress"><div id="bar"></div></div>
+        </div>
+
+        <div class="stage">
+            <div class="card" id="flashcard" role="button" tabindex="0" aria-label="카드 뒤집기">
+                <div class="side front">
+                    <div class="meta"><span class="chip chip-q">질문</span><span class="stars" id="stars"></span></div>
+                    <div class="body" id="question"></div>
+                    <div class="src" id="source"></div>
+                </div>
+                <div class="side back">
+                    <div class="meta"><span class="chip chip-a">정답</span></div>
+                    <div class="body" id="answer"></div>
+                    <div class="src"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="tip">카드를 누르면 정답이 보여요. 화살표 키나 좌우로 밀어서 넘길 수 있어요.</p>
+
+        <div class="controls">
+            <button class="btn" type="button" onclick="prevCard()">이전</button>
+            <button class="btn" type="button" onclick="nextCard()">다음</button>
+            <button class="btn btn-list" type="button" onclick="location.href='index.html'">목록으로 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<!-- ① 오류 수집용: 반드시 맨 위(②, ③보다 앞)에 두세요. 수정하지 마세요. -->
+<script>
+    window.__dataErrors = [];
+    window.addEventListener('error', function (e) {
+        window.__dataErrors.push({ msg: e.message, line: e.lineno });
+    });
+</script>
+
+<!-- ② 장 설정: 새 장을 만들 때 번호와 제목만 고치세요. -->
+<script>
+    const LECTURE = { no: 6, title: "사회복지정책 의제 및 대안의 형성" };
+</script>
+
+<!-- ③ 카드 데이터: 노트북LM이 만든 const cards = [...]; 를 통째로 덮어쓰세요.
+     아래 2장은 화면 확인용 예시입니다. 덮어쓸 때 이 예시도 같이 지우세요.
+     카드마다 q(질문)와 a(정답)가 모두 있어야 합니다. -->
+<script>
+    const cards = [
+        {"q": "★★★ 사회복지정책 과정 5단계의 일반적 진행 순서는? [워크북 p.66]",
+    "a": "① 사회문제 등장 및 의제 설정 ➔ ② 정책 대안 형성 및 분석 ➔ ③ 정책 결정 ➔ ④ 정책 집행 ➔ ⑤ 정책 평가입니다."
+  },
+  {
+    "q": "★★★ 개인문제가 사회문대로 전환되기 위한 핵심 조건은? [워크북 p.66]",
+    "a": "개인의 범위를 벗어나 보편성과 사회성을 획득하고, 문제 원인이 사회체계 결함에 있으며 국가적 공적 개입이 필요하다고 인정되어야 합니다."
+  },
+  {
+    "q": "★★★ 사회복지 문제 이슈화 과정에서 '억압된 이슈(repressed issue)'란? [워크북 p.67]",
+    "a": "사회적 약자의 복지 문제가 기득권의 저항이나 무관심으로 인해 사회적 논쟁의 장(공론장)에 나오지 못하고 배제되는 현상입니다."
+  },
+  {
+    "q": "★★★ 사회복지 문제 이슈화 과정에서 '가짜 이슈(pseudo issue)'란? [워크북 p.67]",
+    "a": "정부나 정치권이 문제를 해결할 진정성이나 실질적 예산 투입 없이 상징적으로 언급만 하며 생색내는 이슈입니다."
+  },
+  {
+    "q": "★★★ 외부주도모형(Outside Initiative Model)의 주요 특징과 주도 세력은? [워크북 p.68, 2019년 기말 기출]",
+    "a": "정부 밖의 이익집단이나 NGO가 주도하여 사회문제를 공공의제화하고 정부에 정책 채택을 강요하는 다원주의적 모형입니다."
+  },
+  {
+    "q": "★★★ 동원모형(Mobilization Model)의 주요 특징과 의제 전개 순서는? [워크북 p.68]",
+    "a": "정부 통치자나 엘리트가 의제를 선점하여 '제도의제'로 먼저 채택한 후, 대중적 지지를 얻기 위해 '공공의제'로 확산시키는 모형입니다."
+  },
+  {
+    "q": "★★★ 내부접근모형(Inside Access Model)의 주요 특징과 공공의제화 여부는? [워크북 p.68]",
+    "a": "정부 내부 소수 엘리트가 주도하며, 대중매체나 공공의제화를 사전에 차단하고 은밀하게 정책을 추진하는 음모론적 모형입니다."
+  },
+  {
+    "q": "★★★ 바흐라흐와 바라츠의 '무의사결정(Non-decision Making)' 이론의 핵심은? [워크북 p.69, 2018년, 2019년 기말 기출]",
+    "a": "권력자들이 자신들의 기득권에 도전하는 불리한 요구나 이슈가 공론화되지 못하도록 사전에 봉쇄·매장하는 행위입니다."
+  },
+  {
+    "q": "★★★ 킹던(Kingdon)의 흐름모형에서 정책의 창이 열리는 4가지 요소는? [워크북 p.69]",
+    "a": "① 문제의 흐름, ② 해결책의 흐름, ③ 참여자의 흐름, ④ 기회(정치)의 흐름이 우연히 결합할 때 정책 의제가 형성됩니다."
+  },
+  {
+    "q": "★★★ 델파이 기법(Delphi Technique)의 핵심 운영 원칙은? [워크북 p.71, 2018년 기말 기출]",
+    "a": "전문가 집단에게 비공개 무기명 설문을 반복하여 집단적 동조 압력 없이 하틀과 객관적 합의를 도출하는 기법입니다."
+  },
+  {
+    "q": "★★★ 브레인스토밍(집단토의)의 가장 핵심적인 운영 규칙은? [워크북 p.71]",
+    "a": "타인의 의견에 대한 비판 엄금, 자유분방한 분위기 조성, 가급적 많은 양의 아이디어 창출입니다."
+  },
+  {
+    "q": "★★★ 비용-편익분석(CBA)의 기본 정의와 평가 척도는? [워크북 p.72, 2017년, 2019년 기말 기출]",
+    "a": "대안에 소요되는 모든 비용과 발생하는 편익을 화폐 단위로 환산하여 absolute 경제적 효율성을 비교하는 분석 기법입니다."
+  },
+  {
+    "q": "★★★ 순현재가치(NPV)의 계산 공식과 타당성 판정 기준은? [워크북 p.72]",
+    "a": "NPV = (편익의 현재가치 총합) - (비용의 현재가치 총합)이며, NPV > 0 일 때 타당성이 있는 것으로 판단합니다."
+  },
+  {
+    "q": "★★★ 편익-비용 비율(B/C Ratio)의 계산 공식과 채택 기준은? [워크북 p.72]",
+    "a": "B/C Ratio = (편익의 현재가치) / (비용의 현재가치)이며, 비율이 1.0 이상일 때 타당성이 있는 대안으로 봅니다."
+  },
+  {
+    "q": "★★★ 내부수익률(IRR)의 개념과 채택 기준은? [워크북 p.72]",
+    "a": "순현재가치(NPV)를 0으로 만들어 주는 할인율로, 사업 자체의 수익률이 사회적 요구 할인율보다 높을 때 대안을 채택합니다."
+  },
+  {
+    "q": "★★★ 민감도 분석(Sensitivity Analysis)의 목적은? [워크북 p.72]",
+    "a": "할인율, 수급자 수 등 주요 예측 변수가 변할 때 비용-편익 분석 결과가 얼마나 민감하게 바뀌는지 검증하는 기법입니다."
+  },
+  {
+    "q": "★★★ 비용-효과분석(CEA)의 주요 장점과 효과 측정 단위는? [워크북 p.73, 2017년, 2019년 기말 기출]",
+    "a": "산출 효과를 화폐 가치로 환산하지 않고 물량 단위(치료 인원, 사망 감소 수 등)로 측정하여 비교하므로 평가 부담을 줄입니다."
+  },
+  {
+    "q": "★★★ 정책실험(Policy Experimentation)의 정의와 주요 한계점은? [워크북 p.73, 2019년 기말 기출]",
+    "a": "표본 집단에게 시범 사업을 실시해 효과를 측정하는 기법으로, 통제집단 대상자의 혜택 배제에 따른 윤리적 문제가 발생합니다."
+  },
+  {
+    "q": "★★★ 의사결정나무분석(Decision Tree Analysis)의 표현 방식은? [워크북 p.73, 2017년 기말 기출]",
+    "a": "선택 가능한 대안과 발생 확률, 기댓값을 나뭇가지 모양의 시각적 도표로 구조화하여 최적안을 선택하는 기법입니다."
+  },
+  {
+    "q": "★★★ 공공의제(체제의제)와 제도의제(정부의제)의 결정적 차이는? [워크북 p.68]",
+    "a": "공공의제는 일반 국민 다수가 문제로 느끼는 대중적 공감대 상태이고, 제도의제는 정부가 공식 안건으로 채택한 상태입니다."
+  },
+  {
+    "q": "★★☆ 사회복지 전문가가 정책 과정 1단계(문제 발견)에서 맡는 역할은? [워크북 p.66]",
+    "a": "상황 참여를 통해 현실의 불만족스러운 상태와 실제 서비스 간의 갭(Gap)을 발견하고 규정합니다."
+  },
+  {
+    "q": "★★☆ 사회복지 전문가가 정책 과정 2단계(문제 분석)에서 맡는 역할은? [워크북 p.66]",
+    "a": "사회조사 기법과 통계를 활용하여 문제의 실태, 원인, 성격을 객관적으로 분석합니다."
+  },
+  {
+    "q": "★★☆ 사회복지 전문가가 정책 과정 3단계(목표 개발)에서 맡는 역할은? [워크북 p.66]",
+    "a": "사회계획 기술을 적용하여 궁극적 최종 목표와 구체적 수단 목표를 구별하고 명확히 수립합니다."
+  },
+  {
+    "q": "★★☆ 사회문제의 특성 중 '주관성(subjectivity)'이 뜻하는 바는? [워크북 p.67]",
+    "a": "문제 인정과 규정에 사람들의 가치관, 지배적 사회 규범, 주관적 인지 판단이 강력하게 개입된다는 뜻입니다."
+  },
+  {
+    "q": "★★☆ 사회복지 문제의 대표적인 이슈화 전략 4가지는? [워크북 p.67]",
+    "a": "강력한 상징 활용, 전문가에 의한 문제 재정의, 현저한 타 문제와의 연계, 사건 발생 시 즉각적 문제 제기(적시성)입니다."
+  },
+  {
+    "q": "★★☆ 이슈의 구체성과 정책의제 형성 가능성의 관계는? [워크북 p.67]",
+    "a": "이슈가 지나치게 구체적이면 지지 기반이 특정 이해관계자로 제한되어 넓은 공공의제화에 불리할 수 있습니다."
+  },
+  {
+    "q": "★★☆ 이슈의 추상성과 대중적 공감대 형성의 관계는? [워크북 p.67]",
+    "a": "이슈가 보편적 가치나 상징 형태(추상성)를 띨 때 일반 대중 다수의 상징적 공감대를 모으기가 쉬워집니다."
+  },
+  {
+    "q": "★★☆ 재분배정책 성격의 복지문제가 의제화되기 어려운 이유는? [워크북 p.67]",
+    "a": "자원과 세금을 부담해야 하는 기득권층의 강력한 반발과 저항에 부딪히기 때문입니다."
+  },
+  {
+    "q": "★★☆ 이슈 기업가(Issue Entrepreneur)의 개념과 역할은? [워크북 p.67, 2013년, 2015년 기말 기출]",
+    "a": "자원과 기술을 동원해 사회문제를 발굴·부각시키고 공공의제화를 주도하는 정치적·사회적 활동가입니다."
+  },
+  {
+    "q": "★★☆ 사회복지 문제의 이해당사자(Interested Parties) 특성은? [워크북 p.67, 2013년, 2015년 기말 기출]",
+    "a": "복지 문제 해결이나 대안 선택에 따라 직접적 혜택을 받거나 비용·불이익을 부담하는 집단입니다."
+  },
+  {
+    "q": "★★☆ 대안 형성의 '협의(narrow)' 개념이 의미하는 바는? [워크북 p.69]",
+    "a": "문제 해결 방법들을 식별·개발하고 기술적으로 비교·분석하는 순수한 기술적 과정입니다."
+  },
+  {
+    "q": "★★☆ 대안 형성의 '광의(broad)' 개념이 의미하는 바는? [워크북 p.69]",
+    "a": "협의의 개념에 더하여 정책 문제를 파악하고 정책 목표를 구체화하는 전 과정을 포함합니다."
+  },
+  {
+    "q": "★★☆ 정책 대안 형성 과정의 이론과 현실의 격차는? [워크북 p.69]",
+    "a": "이론상으로는 합리적·기술적 과정이지만, 실제 현장에서는 강력한 정치적 이해관계가 개입됩니다."
+  },
+  {
+    "q": "★★☆ 정책 문제의 '여과(filtering)' 과정이란? [워크북 p.70]",
+    "a": "분석가가 제한된 시간 속에서 새롭고 파급력이 큰 중요 문제에 집중할 수 있도록 일상적 문제를 걸러내는 작업입니다."
+  },
+  {
+    "q": "★★☆ 정책 대안을 탐색하는 주요 원천 4가지 요소는? [워크북 p.70]",
+    "a": "기존 정책 및 외국 사례, 학술 이론 및 연구, 시민·이해관계자 요구, 전문가 아이디어입니다."
+  },
+  {
+    "q": "★★☆ 점증적 접근방법(Incremental Approach)의 핵심 특징은? [워크북 p.71]",
+    "a": "기존 정책의 현상 유지를 바탕으로 근처의 한정된 대안만을 소폭 수정·탐색하는 보수적 접근법입니다."
+  },
+  {
+    "q": "★★☆ 경향성에 기반한 계량적 미래예측 기법의 3가지 예시는? [워크북 p.71, 2018년 기말 기출]",
+    "a": "시계열 분석(Time-series), 회귀 분석(Regression), 경향성 추계 분석입니다."
+  },
+  {
+    "q": "★★☆ 대안 비교·분석 시 '예비분석'의 핵심 목적은? [워크북 p.72]",
+    "a": "본격적 분석 전에 법적·기술적·재정적 실현가능성이 현저히 떨어지는 대안을 사전 선별(screening)해 제외하는 것입니다."
+  },
+  {
+    "q": "★★☆ 비용-편익분석에서 미래 가치를 현재 가치로 바꾸는 비율은? [워크북 p.72]",
+    "a": "할인율(discount rate)을 사용하여 미래의 금액을 현재 가치로 환산합니다."
+  },
+  {
+    "q": "★★☆ 사회복지정책 대안 형성 시 논리·기술적 한계의 본질은? [워크북 p.73]",
+    "a": "평등, 인간 존엄 등 수치화하기 힘든 복지 가치가 많아 객관적 단일 척도로 계량화하기 어렵다는 점입니다."
+  },
+  {
+    "q": "★★☆ 대안 형성 시 발생할 수 있는 '조직·집단적 한계' 원인은? [워크북 p.73]",
+    "a": "부처 간 자기 이기주의(부처 할거주의), 보수적 관료제 계층 문화, 타 정책 분야와의 가치 충돌입니다."
+  },
+  {
+    "q": "★★☆ 사회복지정책 대안 형성 시 '정치적 한계'가 초래하는 결과는? [워크북 p.73]",
+    "a": "이해집단 간 정치적 타협으로 절차적 실현성은 높아지나, 본질적 공익이나 정당성이 훼손될 수 있습니다."
+  },
+  {
+    "q": "★☆☆ 공공의제(Public Agenda)를 부르는 다른 명칭은? [워크북 p.68]",
+    "a": "체제의제(Systemic Agenda) 또는 풍토의제라고도 부릅니다."
+  },
+  {
+    "q": "★☆☆ 제도의제(Institutional Agenda)를 부르는 다른 명칭은? [워크북 p.68]",
+    "a": "정부의제(Governmental Agenda) 또는 공식의제라고도 부릅니다."
+  },
+  {
+    "q": "★☆☆ 외부주도모형이 전제로 하는 정치사회적 시각은? [워크북 p.68]",
+    "a": "다양한 이익집단이 경쟁하는 다원주의(Pluralism) 사회를 전제로 합니다."
+  },
+  {
+    "q": "★☆☆ 내부접근모형(Inside Access Model)의 다른 명칭은? [워크북 p.68]",
+    "a": "음모모형(Conspiracy Model)이라고도 부릅니다."
+  },
+  {
+    "q": "★☆☆ 1998년 시민사회가 주도한 기초생활보장법 청원 당시 모형은? [워크북 p.68]",
+    "a": "정부 밖의 민간 단체가 공론화를 주도한 외부주도모형에 해당합니다."
+  },
+  {
+    "q": "★☆☆ 1999년 김대중 대통령의 지시 이후 기초생활보장법 추진 모형은? [워크북 p.68]",
+    "a": "최고 통치자가 직접 국정과제로 주도한 동원모형의 성격을 띱니다."
+  },
+  {
+    "q": "★☆☆ 복지가치의 계량화 불가능성이 대안 분석에 주는 한계는? [워크북 p.73]",
+    "a": "비용-편익 분석 등 엄격한 계량적 경제성 평가의 적용을 제약하고 주관성을 개입시킵니다."
+  },
+  {
+    "q": "★☆☆ 자유로운 분위기에서 아이디어를 쏟아내는 창의성 기법 명칭은? [워크북 p.71]",
+    "a": "오스본(Osborn)이 제안한 브레인스토밍(Brainstorming, 집단토의)입니다."}
+    ];</script>
+
+<!-- ④ 프로그램 본체: 수정하지 마세요. -->
+<script>
+    var deck = [];
+    var cur = 0;
+    var swapTimer = null;
+
+    document.title = '제' + LECTURE.no + '장 - ' + LECTURE.title;
+    document.getElementById('page-title').textContent = '제' + LECTURE.no + '장 플래시카드';
+    document.getElementById('page-sub').textContent = LECTURE.title;
+
+    var cardEl = document.getElementById('flashcard');
+
+    function reduceMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    /* ---------- 데이터 검사 ---------- */
+    function validateCards(data) {
+        var errors = [];
+        var valid = [];
+
+        if (!Array.isArray(data) || data.length === 0) {
+            errors.push({ tag: '전체', text: 'cards가 비어 있거나 배열([ ])이 아닙니다.' });
+            return { errors: errors, valid: valid };
+        }
+
+        data.forEach(function (item, i) {
+            var tag = (i + 1) + '번 카드';
+            var problems = [];
+            if (!item || typeof item !== 'object') {
+                problems.push('카드가 { } 형식이 아닙니다.');
+            } else {
+                if (typeof item.q !== 'string' || !item.q.trim()) problems.push('q(질문)가 없거나 비어 있습니다.');
+                if (typeof item.a !== 'string' || !item.a.trim()) problems.push('a(정답)가 없거나 비어 있습니다.');
+            }
+            if (problems.length) {
+                problems.forEach(function (t) { errors.push({ tag: tag, text: t }); });
+            } else {
+                valid.push(item);
+            }
+        });
+
+        return { errors: errors, valid: valid };
+    }
+
+    function showProblemScreen(opts) {
+        document.getElementById('card-screen').style.display = 'none';
+        document.getElementById('problem-screen').style.display = 'block';
+        document.getElementById('problem-title').textContent = opts.title;
+        document.getElementById('problem-summary').textContent = opts.summary;
+
+        var list = document.getElementById('problem-list');
+        list.innerHTML = '';
+        opts.items.forEach(function (it) {
+            var li = document.createElement('li');
+            var tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = it.tag;
+            var txt = document.createElement('span');
+            txt.textContent = it.text;
+            li.appendChild(tag);
+            li.appendChild(txt);
+            list.appendChild(li);
+        });
+
+        var tips = document.getElementById('problem-tips');
+        tips.innerHTML = '';
+        if (opts.tips && opts.tips.length) {
+            tips.appendChild(document.createTextNode('자주 생기는 원인'));
+            var ul = document.createElement('ul');
+            opts.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                ul.appendChild(li);
+            });
+            tips.appendChild(ul);
+            tips.style.display = 'block';
+        } else {
+            tips.style.display = 'none';
+        }
+
+        var btn = document.getElementById('partial-btn');
+        if (opts.buttonText) {
+            btn.textContent = opts.buttonText;
+            btn.style.display = 'block';
+            btn.onclick = opts.onButton;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function startDeck(list) {
+        deck = list;
+        cur = 0;
+        document.getElementById('problem-screen').style.display = 'none';
+        document.getElementById('card-screen').style.display = 'block';
+        render();
+    }
+
+    function init() {
+        // 데이터 문법 오류: ③ 블록이 아예 실행되지 못한 경우
+        if (typeof cards === 'undefined') {
+            var items = window.__dataErrors.map(function (er) {
+                return { tag: er.line ? ('약 ' + er.line + '줄') : '오류', text: er.msg };
+            });
+            if (!items.length) items.push({ tag: '오류', text: 'cards를 찾을 수 없습니다. const cards = [ ... ]; 형태가 맞는지 확인하세요.' });
+            showProblemScreen({
+                title: '⚠️ 카드 데이터를 읽지 못했어요',
+                summary: '데이터 부분에 문법 오류가 있어서 프로그램이 멈췄습니다. 아래 줄 근처를 확인하세요.',
+                items: items,
+                tips: [
+                    '문장 안에 큰따옴표(")가 들어 있음 → 작은따옴표(\')로 바꾸기',
+                    '카드와 카드 사이 쉼표(,) 빠짐, 또는 맨 끝의 ]; 가 지워짐',
+                    '문장 한가운데에서 줄이 바뀜 (한 문장은 한 줄로)',
+                    '붙여넣은 글에 // 가 포함되어 뒷부분이 주석 처리됨'
+                ]
+            });
+            return;
+        }
+
+        var result = validateCards(cards);
+
+        if (result.errors.length === 0) {
+            startDeck(result.valid);
+            return;
+        }
+
+        var total = Array.isArray(cards) ? cards.length : 0;
+        var badCount = total - result.valid.length;
+        showProblemScreen({
+            title: '⚠️ 고칠 곳이 ' + result.errors.length + '군데 있어요',
+            summary: badCount > 0
+                ? '전체 ' + total + '장 중 ' + badCount + '장에 문제가 있습니다. 데이터를 고치고 새로고침하세요.'
+                : '카드 데이터를 확인하고 새로고침하세요.',
+            items: result.errors,
+            tips: ['카드마다 q(질문)와 a(정답)가 모두 있어야 하고, 둘 다 글자(따옴표로 감싼 문장)여야 합니다'],
+            buttonText: result.valid.length > 0 ? '오류 없는 ' + result.valid.length + '장만 먼저 보기' : null,
+            onButton: function () { startDeck(result.valid); }
+        });
+    }
+
+    /* ---------- 카드 표시 ---------- */
+    // 질문 앞의 ★(중요도)와 끝의 [출처]를 따로 떼어 작은 표식으로 보여줍니다.
+    function parseQuestion(raw) {
+        var text = raw.trim();
+        var stars = '';
+        var src = '';
+        var m = text.match(/^([★☆]{1,5})\s*/);
+        if (m) { stars = m[1]; text = text.slice(m[0].length); }
+        var s = text.match(/\s*\[([^\]]{1,40})\]\s*$/);
+        if (s) { src = s[1]; text = text.slice(0, s.index); }
+        if (!text.trim()) { text = raw.trim(); stars = ''; src = ''; }
+        return { stars: stars, src: src, text: text };
+    }
+
+    function render() {
+        var c = deck[cur];
+        var p = parseQuestion(c.q);
+
+        document.getElementById('question').textContent = p.text;
+        document.getElementById('answer').textContent = c.a.trim();
+        document.getElementById('source').textContent = p.src ? '출처: ' + p.src : '';
+
+        var starsEl = document.getElementById('stars');
+        if (p.stars) {
+            var filled = (p.stars.match(/★/g) || []).length;
+            starsEl.textContent = p.stars;
+            starsEl.setAttribute('aria-label', '중요도 ' + p.stars.length + '개 중 ' + filled + '개');
+            starsEl.style.display = 'inline-block';
+        } else {
+            starsEl.style.display = 'none';
+        }
+
+        document.getElementById('current').textContent = cur + 1;
+        document.getElementById('total').textContent = deck.length;
+        document.getElementById('bar').style.width = ((cur + 1) / deck.length * 100) + '%';
+    }
+
+    function flip() { cardEl.classList.toggle('flipped'); }
+
+    function go(delta) {
+        cur = (cur + delta + deck.length) % deck.length;
+        clearTimeout(swapTimer);
+        if (cardEl.classList.contains('flipped') && !reduceMotion()) {
+            // 먼저 카드를 앞면으로 돌리고, 옆면이 되어 안 보일 때 내용을 바꿔서 다음 정답이 미리 비치지 않게 함
+            cardEl.classList.remove('flipped');
+            swapTimer = setTimeout(render, 300);
+        } else {
+            cardEl.classList.remove('flipped');
+            render();
+        }
+    }
+    function nextCard() { go(1); }
+    function prevCard() { go(-1); }
+
+    cardEl.addEventListener('click', flip);
+
+    document.addEventListener('keydown', function (e) {
+        if (document.getElementById('card-screen').style.display === 'none') return;
+        if (e.key === 'ArrowRight') { nextCard(); }
+        else if (e.key === 'ArrowLeft') { prevCard(); }
+        else if ((e.key === ' ' || e.key === 'Enter') && e.target.tagName !== 'BUTTON') { e.preventDefault(); flip(); }
+    });
+
+    // 스마트폰: 좌우로 밀어서 넘기기
+    var touchX = null, touchY = null;
+    cardEl.addEventListener('touchstart', function (e) {
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+    }, { passive: true });
+    cardEl.addEventListener('touchend', function (e) {
+        if (touchX === null) return;
+        var dx = e.changedTouches[0].clientX - touchX;
+        var dy = e.changedTouches[0].clientY - touchY;
+        touchX = null;
+        if (Math.abs(dx) > 60 && Math.abs(dy) < 50) {
+            if (dx < 0) nextCard(); else prevCard();
+        }
+    }, { passive: true });
+
+    init();
+</script>
+</body>
+</html>

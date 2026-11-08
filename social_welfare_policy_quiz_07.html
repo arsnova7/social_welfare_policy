@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회복지정책론 퀴즈</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    :root {
+        --primary: #b45309;
+        --bg-gray: #f4f6f8;
+        --success: #28a745;
+        --danger: #dc3545;
+    }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-gray); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .header h1 { font-size: 1.8rem; color: #14213d; font-weight: 800; margin-bottom: 10px; word-break: keep-all; }
+    .header p { color: #55657d; font-weight: bold; font-size: 1.1rem; margin: 0; }
+    .header .score-text { margin-top: 6px; color: #166534; font-size: 1rem; }
+
+    .quiz-box { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .q-type { display: inline-block; background: #e0e7f1; color: #14213d; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 15px; font-weight: 700; }
+    #question-text { font-weight: bold; font-size: 1.2rem; margin-bottom: 25px; word-break: keep-all; line-height: 1.4; color: #14213d; }
+
+    .option-btn { width: 100%; text-align: left; padding: 16px; margin: 10px 0; border: 1.5px solid #e0e7f1; border-radius: 10px; background: white; cursor: pointer; font-size: 1.05rem; transition: 0.2s; line-height: 1.4; color: #2f3640; font-weight: 500; font-family: inherit; }
+    .option-btn:hover { background: #fff7ed; border-color: var(--primary); }
+    .option-btn:focus-visible, .btn-next:focus-visible, .result-btn:focus-visible { outline: 3px solid #14213d; outline-offset: 2px; }
+    .option-btn.correct { background: #e6fffa; border-color: var(--success); color: var(--success); font-weight: bold; }
+    .option-btn.wrong { background: #fff5f5; border-color: var(--danger); color: var(--danger); opacity: 0.6; }
+
+    .btn-next { width: 100%; padding: 16px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 25px; display: none; font-size: 1.1rem; transition: 0.2s; font-family: inherit; }
+    .btn-next:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    .hint-box, .exp-box { padding: 18px; border-radius: 10px; margin-top: 15px; display: none; line-height: 1.6; word-break: keep-all; font-size: 0.95rem; }
+    .hint-box { background: #fffbeb; border: 1px solid #fbd38d; color: #b45309; }
+    .exp-box { background: #f0fdf4; border: 1px solid #bbf7d0; color: #065f46; }
+
+    .result-card { background: white; border-radius: 20px; padding: 40px; text-align: center; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .result-btn { width: 100%; padding: 16px; margin: 10px 0; border: 1.5px solid #e0e7f1; border-radius: 10px; background: white; cursor: pointer; font-size: 1.05rem; font-weight: bold; transition: 0.2s; font-family: inherit; }
+    .result-btn:hover { background: #f3f6fa; }
+    .result-score { margin: 6px 0 4px; font-size: 3.4rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+    .result-detail { margin: 0 0 10px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    #result-msg { margin: 0 0 18px; line-height: 1.6; word-break: keep-all; color: #14213d; font-weight: 600; }
+    .missed { text-align: left; margin: 0 0 18px; padding: 10px 16px; border: 1px solid #e0e7f1; border-radius: 10px; }
+    .missed summary { cursor: pointer; font-weight: 700; color: #14213d; padding: 4px 0; }
+    .missed ol { margin: 10px 0 4px; padding-left: 26px; font-size: 0.95rem; line-height: 1.55; word-break: keep-all; color: #2f3640; }
+    .missed li { margin-bottom: 8px; }
+
+    /* 문제 화면 아래의 목록으로 돌아가기 버튼 */
+    .list-btn { width: 100%; padding: 14px; margin-top: 16px; border: 1.5px solid #cbd5e1; border-radius: 10px; background: white; color: #14213d; font-family: inherit; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .list-btn:hover { background: #f3f6fa; }
+    .list-btn:focus-visible { outline: 3px solid #14213d; outline-offset: 2px; }
+
+    /* 데이터 검사 결과 화면 */
+    .problem-card { display: none; background: white; border-radius: 15px; padding: 28px; border-left: 6px solid var(--danger); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .problem-card h2 { margin: 0 0 8px; font-size: 1.3rem; color: #14213d; }
+    .problem-card .summary { margin: 0 0 16px; color: #55657d; line-height: 1.6; word-break: keep-all; }
+    .problem-list { list-style: none; margin: 0 0 8px; padding: 0; }
+    .problem-list li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #e0e7f1; line-height: 1.5; word-break: keep-all; }
+    .problem-list .tag { flex: none; min-width: 3.2rem; font-weight: 800; color: var(--danger); }
+    .problem-list .warn .tag { color: var(--primary); }
+    .problem-card .tips { margin: 12px 0 0; padding: 14px; background: #f3f6fa; border-radius: 10px; font-size: 0.92rem; line-height: 1.6; color: #2f3640; word-break: keep-all; }
+    .problem-card .tips ul { margin: 6px 0 0; padding-left: 20px; }
+    #partial-btn { width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; font-size: 1.05rem; cursor: pointer; font-family: inherit; }
+    #partial-btn:focus-visible { outline: 3px solid #14213d; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="problem-screen" class="problem-card" role="alert">
+        <h2 id="problem-title"></h2>
+        <p id="problem-summary" class="summary"></p>
+        <ul id="problem-list" class="problem-list"></ul>
+        <div id="problem-tips" class="tips"></div>
+        <button id="partial-btn" type="button"></button>
+    </div>
+
+    <div id="quiz-screen">
+        <div class="header">
+            <h1 id="lecture-title"></h1>
+            <p id="progress-text"></p>
+            <p id="score-text" class="score-text"></p>
+        </div>
+        <div class="quiz-box">
+            <div id="question-type" class="q-type">개념확인</div>
+            <div id="question-text"></div>
+            <div id="options-container"></div>
+
+            <div id="hint-box" class="hint-box">💡 <b>힌트:</b> <span id="hint-text"></span></div>
+            <div id="exp-box" class="exp-box">✅ <b>정답 및 해설:</b> <span id="exp-text"></span></div>
+
+            <button id="next-btn" class="btn-next" type="button" onclick="nextQuestion()">다음 문제로</button>
+        </div>
+
+        <button class="list-btn" type="button" onclick="goList()">🏠 목록으로 돌아가기</button>
+    </div>
+
+    <div id="result-screen" class="result-card">
+        <h2 id="result-title">🎊 학습을 마쳤습니다!</h2>
+        <p id="result-score" class="result-score"></p>
+        <p id="result-detail" class="result-detail"></p>
+        <p id="result-msg"></p>
+        <details id="missed-details" class="missed">
+            <summary id="missed-summary"></summary>
+            <ol id="missed-list"></ol>
+        </details>
+        <button id="retry-missed-btn" class="result-btn" type="button" style="background:var(--primary); color:white; border:none;" onclick="retryMissed()"></button>
+        <button class="result-btn" type="button" onclick="retryAll()">🔄 처음부터 다시 풀기</button>
+        <button class="result-btn" type="button" onclick="location.href='index.html'">🏠 목록으로 돌아가기</button>
+    </div>
+</div>
+
+<!-- ① 오류 수집용: 반드시 맨 위(②, ③보다 앞)에 두세요. 수정하지 마세요. -->
+<script>
+    window.__dataErrors = [];
+    window.addEventListener('error', function (e) {
+        window.__dataErrors.push({ msg: e.message, line: e.lineno });
+    });
+</script>
+
+<!-- ② 장 설정: 새 장을 만들 때 번호와 제목만 고치세요. -->
+<script>
+    const LECTURE = { no: 7, title: "사회복지정책의 결정, 집행 및 평가" };
+</script>
+
+<!-- ③ 퀴즈 데이터: 노트북LM이 만든 const quizData = [...]; 를 통째로 덮어쓰세요.
+     아래 1문항은 화면 확인용 예시입니다. 덮어쓸 때 이 예시도 같이 지우세요.
+     문제마다 type, q, o, a, h, e 가 모두 있어야 하고, a는 첫 번째 보기가 0입니다. -->
+<script>
+    const quizData = [
+        {
+            "type": "비교·분석",
+    "q": "집단적 사회복지정책 결정모형과 그 핵심 내용이 올바르게 연결된 것은? [워크북 p.85, 2014년, 2016년, 2018년 기말 기출]",
+    "o": [
+      "조직모형 - 조직 내 갈등 해결을 위한 설득, 흥정, 연합 활동을 강조한다.",
+      "회사모형 - 상호 배타적인 세 모형을 종합적으로 활용하여 국가 위기상황을 설명한다.",
+      "앨리슨모형 - 조직화된 무정부상태에서의 정책 결정 형태 설명에 적합하다.",
+      "쓰레기통모형 - 환경에 대한 적응을 위한 조직의 학습활동을 강조한다."
+    ],
+    "a": 0,
+    "h": "조직모형은 만족모형을 집단 차원으로 확장하여 설득과 연합을 강조합니다.",
+    "e": "정답: 0 [반복 출제 개념]\n① 조직모형은 조직 내 갈등 해결을 위한 정치적 연합과 설득을 강조합니다. ② 상호 배타적인 세 모형을 종합하는 것은 앨리슨모형, ③ 조직화된 무정부상태는 쓰레기통모형, ④ 조직 학습활동을 강조하는 것은 회사모형입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책의 거시적 결정모형 중 환경의 변화 및 제도 내 인간의 선택이 정부 정책결정기구에 대해 갖는 영향을 강조하는 것은? [워크북 p.86, 2016년, 2018년 기말 기출]",
+    "o": [
+      "체계 이론",
+      "엘리트 이론",
+      "신제도 이론",
+      "공공선택 이론"
+    ],
+    "a": 2,
+    "h": "공식적·법적 절차를 넘어 환경의 변화와 인간의 능동적 선택을 중시하는 거시 이론입니다.",
+    "e": "정답: 2 [반복 출제 개념]\n신제도 이론은 기존 제도주의의 정태적 한계를 극복하고, 외부 환경 변화 및 제도 내 인간의 선택이 정책 결정에 미치는 영향을 강조합니다. ① 체계 이론은 투입-전환-산출-환류 강조, ② 엘리트 이론은 소수 권력층 지향 반영, ④ 공공선택 이론은 경제학적 분석 도입입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "사회복지정책 집행 연구의 접근방법에 대한 설명으로 적절하지 않은 것은? [워크북 p.86, 2013년, 2015년, 2017년, 2019년 기말 기출]",
+    "o": [
+      "상향식 접근은 일선 집행자에서 출발한 실제 정책 집행의 내용을 분석한다.",
+      "상향식 접근은 전방향적 접근이라고도 하며, 반대자들의 전략에 무관심하다.",
+      "하향식 접근은 정책순응분석을 통해 정책 내용의 수정·보완을 시도한다.",
+      "하향식 접근은 목표의 달성 정도 및 정책 의도와의 일치 여부를 분석한다."
+    ],
+    "a": 1,
+    "h": "전방향적 접근(forward mapping)이자 반대자 전략에 무관심한 것은 하향식 접근입니다.",
+    "e": "정답: 1 [반복 출제 개념]\n전방향적 접근(forward mapping)은 하향식 접근방법의 별칭이며, 하향식 접근은 정책결정자의 목표 달성에 집중하므로 반대자들의 전략이나 현장의 실제적 행동 분석을 소홀히(무관심)하는 단점이 있습니다. 상향식 접근은 후방향적 접근(backward mapping)이라 부릅니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책 평가의 유형 중 '평가 시기'에 따른 분류에 해당하는 것은? [워크북 p.86, 2014년 기말 기출]",
+    "o": [
+      "정책영향평가",
+      "과정평가",
+      "형성평가",
+      "메타평가"
+    ],
+    "a": 2,
+    "h": "사업 수행 초기나 집행 도중에 수정·보완을 목적으로 실시하는 평가입니다.",
+    "e": "정답: 2 [반복 출제 개념]\n평가 시기에 따른 분류는 집행 후 최종 결과를 평가하는 '총괄평가'와 집행 도중 수정·보완을 위해 실시하는 '형성평가'로 나뉩니다. ①·②는 평가 대상/결과 종류, ④는 종합적 재평가 방식입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책 평가의 타당성 관련 핵심 개념과 그에 대한 설명이 적절히 연결된 것은? [워크북 p.87, 2013년, 2015년, 2017년, 2019년 기말 기출]",
+    "o": [
+      "내적 타당성 - 특정 프로그램의 대상 집단이 보여 주는 실질적인 참여 정도",
+      "바이어스(bias) - 효과와 처리(사회복지정책) 간의 인과관계 증명",
+      "커버리지(coverage) - 애초 대상 집단이 아닌 기타 집단의 참여가 두드러진 경우",
+      "경쟁적 설명 요인 - 평가 타당성을 저해하며 허위변수, 혼란변수 등이 존재함"
+    ],
+    "a": 3,
+    "h": "평가 결과의 인과관계를 방해하는 외적 요인들을 지칭하는 개념입니다.",
+    "e": "정답: 3 [반복 출제 개념]\n경쟁적 설명 요인(허위변수, 혼란변수 등)은 내적 타당성을 저해하는 요인입니다. ① 내적 타당성은 효과와 처리 간 인과관계 증명, ② 바이어스는 애초 대상 외 기타 집단의 참여 정도, ③ 커버리지는 대상 집단의 실질적 참여 정도를 의미합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책 결정(Policy Decision-making)의 개념과 특징에 관한 설명으로 옳지 않은 것은? [워크북 p.76]",
+    "o": [
+      "해당 결정권자는 정당성을 가진 권력(권위)을 보유해야 한다.",
+      "다양한 이해관계가 응집되어 있으므로 정치적 성격을 띤다.",
+      "최종적인 판단 기준은 특정 이익집단의 이윤 극대화이어야 한다.",
+      "사회 전체적 입장을 고려하는 거시적 시각이 필요하다."
+    ],
+    "a": 2,
+    "h": "정책 결정의 정당성을 결정짓는 최종 판단 기준은 공공의 이익입니다.",
+    "e": "정답: 2\n사회복지정책 결정이 합당한가에 대한 최종적인 판단 기준은 특정 개인이나 이익집단의 사익이 아닌 '공익(Public Interest)'이어야 합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "개인적 정책결정모형 중 '완전한 정보와 고도의 합리성'을 전제로 가장 이상적인 대안을 선택한다는 규범적 모형은? [워크북 p.76]",
+    "o": [
+      "합리모형",
+      "만족모형",
+      "점증모형",
+      "혼합모형"
+    ],
+    "a": 0,
+    "h": "인간의 완전한 전지전능함을 전제로 하는 가장 이상적이고 정밀한 모형입니다.",
+    "e": "정답: 0\n합리모형(Rational Model)은 모든 정보와 대안의 결과를 예측할 수 있다는 전제 하에 최고 효율의 대안을 선택한다는 이상적·규범적 모형입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사이몬(Simon)이 제시한 모형으로, 인간의 제한된 합리성을 인정하고 '동의할 만한 차선의 대안'을 선택한다는 모형은? [워크북 p.76]",
+    "o": [
+      "만족모형",
+      "최적모형",
+      "점증모형",
+      "합리모형"
+    ],
+    "a": 0,
+    "h": "현실적인 지적 한계를 받아들이고 주관적으로 만족할 만한 수준을 찾는 모형입니다.",
+    "e": "정답: 0\n만족모형(Satisficing Model)은 인간의 제한된 합리성(bounded rationality)을 전제로 하여 모든 대안을 검토하는 대신 만족스러운 수준의 대안을 찾아 선택한다는 현실적 모형입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "린드블롬(Lindblom) 등이 주장한 모형으로, 기존 정책을 바탕으로 상황 변화에 맞춰 소폭의 수정·보완만을 시도하는 보수적 모형은? [워크북 p.76]",
+    "o": [
+      "점증모형",
+      "혼합모형",
+      "최적모형",
+      "회사모형"
+    ],
+    "a": 0,
+    "h": "현상 유지를 기반으로 정치적 합의를 중시하며 소폭 개편만 추진하는 모형입니다.",
+    "e": "정답: 0\n점증모형(Incremental Model)은 현실의 다원주의적 협상과 합의를 중시하여 기존 정책과의 연장선상에서 약간의 변형만을 가해 대안을 선택하는 모형입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "에치오니(Etzioni)가 제시한 모형으로, 근본적 결정은 합리모형으로, 세부적 결정은 점증모형으로 처리하는 방식은? [워크북 p.77]",
+    "o": [
+      "혼합모형(Mixed-scanning Model)",
+      "최적모형(Optimal Model)",
+      "쓰레기통모형(Garbage Can Model)",
+      "앨리슨모형(Allison Model)"
+    ],
+    "a": 0,
+    "h": "합리모형의 이상주의와 점증모형의 보수주의를 제3의 방식으로 혼용 조화시킨 모형입니다.",
+    "e": "정답: 0\n혼합관조모형(혼합모형)은 근본적 방향 결정에는 합리모형을 적용해 개괄 관측하고, 세부 대안 결정에는 점증모형을 적용하는 절충적 모형입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "드로어(Dror)가 주장한 모형으로, 선례가 없는 급변하는 상황에서 직관, 창의성 등 '초합리적 요인'의 개입을 부각하는 모형은? [워크북 p.77]",
+    "o": [
+      "최적모형",
+      "만족모형",
+      "조직모형",
+      "체계이론"
+    ],
+    "a": 0,
+    "h": "양적·질적 분석 외에도 통찰력과 직관 같은 초합리성을 강조합니다.",
+    "e": "정답: 0\n최적모형(Optimal Model)은 경제적 합리성뿐만 아니라 직관, 영감, 창의성 등 초합리적(extra-rational) 요소가 정책 결정 과정에 중요하게 개입됨을 부각한 규범적 모형입니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "집단적 정책결정모형 중 사이몬의 만족모형을 관료제 조직의 의사결정에 유추·적용한 모형은? [워크북 p.77]",
+    "o": [
+      "조직모형(Organizational Model)",
+      "회사모형(Cyert & March Model)",
+      "엘리트 모형",
+      "공공선택 모형"
+    ],
+    "a": 0,
+    "h": "조직 내 하부 단위 간의 갈등을 설득과 정치적 흥정으로 해결한다고 봅니다.",
+    "e": "정답: 0\n조직모형은 개인이 아닌 조직 집단 수준에서 만족모형의 기본 틀을 적용하여, 조직 내 분파 간 흥정과 연합을 통해 만족할 만한 대안을 결정한다고 설명합니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "조직모형을 발전시켜 실제 기업체의 의사결정을 설명하며, '환경에 대한 적응과 조직 학습'을 강조하는 모형은? [워크북 p.77]",
+    "o": [
+      "회사모형(Firm Model)",
+      "쓰레기통모형",
+      "혼합모형",
+      "체계모형"
+    ],
+    "a": 0,
+    "h": "싸이어트와 마치가 제시한 연합체로서의 회사 결정모형입니다.",
+    "e": "정답: 0\n회사모형은 조직이 갈등의 준해결, 불확실성의 회피, 문제 중심의 탐색, 조직의 학습 과정을 거쳐 의사결정을 내린다고 보는 모형입니다."
+  },
+  {
+    "type": "사례적용",
+    "q": "쿠바 미사일 위기 당시 미국 정부의 위기관리 정책 결정 과정을 3가지 상호배타적 모형으로 종합 설명한 연구는? [워크북 p.77]",
+    "o": [
+      "앨리슨 모형(Allison Model)",
+      "킹던의 흐름 모형",
+      "드로어의 최적 모형",
+      "에치오니의 혼합 모형"
+    ],
+    "a": 0,
+    "h": "합리적 행위자 모형, 조직과정 모형, 관료정치 모형이라는 3가지 시각을 제시했습니다.",
+    "e": "정답: 0\n앨리슨 모형은 외교·안보 분야의 위기 결정 상황을 국가를 단일 행위자로 보는 합리모형(Model 1), 조직절차로 보는 조직과정모형(Model 2), 정치적 흥정으로 보는 관료정치모형(Model 3)으로 분석했습니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "고도로 복잡하고 혼란스러운 '조직화된 무정부상태(Organized Anarchy)' 하에서의 의사결정을 설명하는 모형은? [워크북 p.77]",
+    "o": [
+      "쓰레기통 모형(Garbage Can Model)",
+      "만족 모형",
+      "점증 모형",
+      "신제도 이론"
+    ],
+    "a": 0,
+    "h": "문제, 해결책, 참여자, 기회라는 4가지 요소가 독자적으로 떠돌다 결합합니다.",
+    "e": "정답: 0\n코엔, 마치, 올슨이 제시한 쓰레기통 모형은 불확실성이 극심한 조직화된 무정부상태에서 4가지 요소가 우연히 쓰레기통 속에서 만나듯 결합해 정책이 결정된다고 설명합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "소수 권력층의 지배적 가치관이나 개인적 선호가 공공정책에 일방적으로 반영된다고 주장하는 거시적 모형은? [워크북 p.77]",
+    "o": [
+      "엘리트 이론(Elite Theory)",
+      "체계 이론(System Theory)",
+      "공공선택 이론(Public Choice Theory)",
+      "다원주의 이론(Pluralism)"
+    ],
+    "a": 0,
+    "h": "행정부, 국회, 이익집단의 소수 엘리트 연합인 '철의 삼각'을 부각합니다.",
+    "e": "정답: 0\n엘리트 이론은 사회의 소수 권력 엘리트층이 정책 결정권을 독점하고 자신들의 가치와 선호를 국민에게 일방적으로 집행한다고 설명합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "정책결정기구를 전환기구로 보아 국민의 요구와 지지를 '투입'받아 정책을 '산출'하고 '환류'를 강조하는 거시 모형은? [워크북 p.78]",
+    "o": [
+      "체계 이론(System Theory)",
+      "엘리트 이론",
+      "공공선택 이론",
+      "구제도주의"
+    ],
+    "a": 0,
+    "h": "이스턴(Easton)의 정치체계 투입-전환-산출-환류 메커니즘에 바탕을 둡니다.",
+    "e": "정답: 0\n체계 이론은 정책결정체계가 외부 환경으로부터 투입(Input)을 받아 정책(Output)으로 전환하고, 환류(Feedback) 과정을 거쳐 적응해 나가는 메커니즘을 설명합니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "정부 기구의 공식적·법적 구조만을 해석하던 구제도주의와 달리, 신제도주의(Neo-institutionalism)의 핵심 특징은? [워크북 p.78]",
+    "o": [
+      "제도와 외부 환경 및 제도 내 인간의 선택 간 상호작용을 고려한다.",
+      "헌법과 법률 문언의 정밀한 조항 해석에만 국한한다.",
+      "시장의 자율적 가격 메커니즘을 완전 수용한다.",
+      "소수 엘리트의 은밀한 음모만을 강조한다."
+    ],
+    "a": 0,
+    "h": "제도가 인간 행동에 영향을 미침과 동시에 인간의 선택이 제도를 변화시킨다고 봅니다.",
+    "e": "정답: 0\n신제도주의는 공식적 정태 구조 분석에 머물던 구제도주의를 탈피하여, 제도적 맥락과 인간 행동/선택 및 외부 환경 간의 동태적 상호작용을 중시합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "경제학적 분석기법을 정치학 및 집단적 정책 결정 설명에 도입하여 다수결 투표, 관료의 예산 극대화 등을 설명하는 이론은? [워크북 p.78]",
+    "o": [
+      "공공선택 이론(Public Choice Theory)",
+      "체계 이론",
+      "최적 모형",
+      "혼합 모형"
+    ],
+    "a": 0,
+    "h": "정치인이나 관료도 시장의 소비자처럼 자기 이익을 극대화하려는 존재로 해석합니다.",
+    "e": "정답: 0\n공공선택 이론은 정치인, 관료, 투표자를 시장의 합리적 경제인으로 전제하고, 보편적 경제학 도구를 사용해 공공부문 의사결정을 분석하는 이론입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책 집행(Policy Implementation)의 정의로 가장 적절한 것은? [워크북 p.78]",
+    "o": [
+      "결정된 정책 목표를 달성하기 위해 결정 사항을 구체화·실체화하는 활동",
+      "사회문제를 공공의제로 전환시키는 대중 홍보 활동",
+      "여러 정책 대안의 비용과 편익을 화폐 가치로 비교하는 기법",
+      "국회에서 법률안을 최종 의결하는 서명 행위"
+    ],
+    "a": 0,
+    "h": "문서상의 정책 의도를 현장에서 실질적으로 구현하고 서비스로 전달하는 단계입니다.",
+    "e": "정답: 0\n사회복지정책 집행은 확정된 정책 의도와 법률 내용을 현장에서 구체적 서비스와 프로그램으로 실체화하는 실질적 이행 단계입니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "사회복지정책 집행이 일반 행정 정책 집행과 구별되는 '특성'에 해당하지 않는 것은? [워크북 p.78]",
+    "o": [
+      "재분배적 성격으로 인한 정치적·이념적 갈등의 내재화",
+      "민간 위탁 및 NGO 등 제3섹터 참여의 일반화",
+      "지역 특화 수요 충족을 위한 지방 위임의 필요성",
+      "전적으로 중앙집권적이고 관료제적인 일방적 통제"
+    ],
+    "a": 3,
+    "h": "사회복지 집행은 연성(soft) 분야로 현장 재량과 다양한 위탁 방식이 부각됩니다.",
+    "e": "정답: 3\n사회복지정책 집행은 이념적 갈등 내재, 민간 위탁 활성화, 지방정부로의 위임 필요성을 특징으로 하며, 일방적인 중앙 관료제의 집권적 통제는 성격에 맞지 않습니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "정책 집행 단계 중 표준운영절차(SOP)를 작성하고 집행 절차와 선후관계를 규명하는 단계는? [워크북 p.79]",
+    "o": [
+      "정책 지침의 개발 및 작성",
+      "자원의 확보 및 배분",
+      "정책 실현 활동",
+      "집행의 감독 및 통제"
+    ],
+    "a": 0,
+    "h": "결정된 법안을 실행에 옮기기 위한 세부 행정 지침을 세우는 1단계입니다.",
+    "e": "정답: 0\n정책 집행 1단계는 '정책 지침의 개발 및 작성'이며, 일관되고 매끄러운 업무 처리를 위한 표준운영절차(SOP)를 제정하는 과정입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "정책 집행 단계 중 모니터링(monitoring) 및 형성적 과정평가가 실시되는 단계는? [워크북 p.79]",
+    "o": [
+      "집행의 감독 및 통제",
+      "정책 지침의 개발",
+      "자원의 확보 및 배분",
+      "정책 실현 활동"
+    ],
+    "a": 0,
+    "h": "집행 과정이 원래 지침대로 잘 진행되는지 확인하고 교정하는 4단계입니다.",
+    "e": "정답: 0\n정책 집행 4단계인 '집행의 감독 및 통제'에서는 모니터링을 통해 목표 이탈을 막고 과정 평가를 시행하여 집행 행태를 통제합니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "성공적인 사회복지정책 집행을 결정하는 요인들에 관한 설명으로 옳지 않은 것은? [워크북 p.79]",
+    "o": [
+      "정책 지침과 내용의 명확성과 일관성이 높을수록 집행 성공 가능성이 높다.",
+      "집행에 필요한 인적·물적 자원이 지속적으로 확보되어야 한다.",
+      "거부점(veto point)이 많고 부처 할거주의가 심할수록 집행이 성공한다.",
+      "일선 집행자의 전문적 능력과 순응도가 높아야 한다."
+    ],
+    "a": 2,
+    "h": "중간에 정책을 저지할 거부점이 많고 관료적 이기주의가 강하면 집행이 실패합니다.",
+    "e": "정답: 2\n집행 조직 내 부처 할거주의나 느슨한 연계, 그리고 거부점(veto points)이 많을수록 정책 진행이 지연되거나 왜곡되어 집행 성공 가능성이 저하됩니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "정책 내용과 지침이 다소 불명확할 때 성공적인 정책 집행을 위해 강조되는 핵심 요소는? [워크북 p.79]",
+    "o": [
+      "일선 집행자의 현장적응적 재량권(adaptive implementation)",
+      "중앙정부의 엄격한 처벌 조항 강화",
+      "모든 재량권을 완전히 박탈하는 일괄 지침",
+      "민간 위탁 사업의 전면 취소"
+    ],
+    "a": 0,
+    "h": "복잡한 현장 문제에 유연하게 대응하는 일선 사회복지사의 재량입니다.",
+    "e": "정답: 0\n정책 지침이 모호할수록 현장의 일선 집행자가 상황에 맞게 유연하게 대응하는 현장적응적 재량권과 타협 능력이 성공적 집행의 관건이 됩니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "하향식 정책 집행 접근방법(전방향적 접근)의 장점에 해당하는 것은? [워크북 p.80]",
+    "o": [
+      "성공적인 정책 집행의 결정 요인을 체계적으로 파악하기 용이하다.",
+      "일선 집행자가 인지하는 현장의 부작용을 즉각 반영한다.",
+      "정책 반대자들의 전략과 행동을 정밀하게 분석한다.",
+      "정책 결정 단계의 당초 의도를 의도적으로 경시한다."
+    ],
+    "a": 0,
+    "h": "결정자의 의도에서 출발하여 집행 순응도와 목표 달성 요인을 체계화합니다.",
+    "e": "정답: 0\n하향식 접근방법은 결정자 시각에서 목표 달성도와 영향 요인을 체계적·규범적으로 파악하는 데 유용하지만, 현장 반응이나 반대자 전략을 과소평가하는 한계가 있습니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "상향식 정책 집행 접근방법(후방향적 접근)의 단점으로 지적되는 것은? [워크북 p.80]",
+    "o": [
+      "애초의 정책 결정 단계에서 설정된 정책 의도를 경시할 수 있다.",
+      "일선 집행자의 현장 인지 전략을 전혀 파악하지 못한다.",
+      "조직 상층부의 권력 집권화를 과도하게 옹호한다.",
+      "현장에서 발생하는 부수적 효과를 분석하지 않는다."
+    ],
+    "a": 0,
+    "h": "현장 일선 참여자들의 개별적 상호작용 분석에 치중해 원래 취지를 놓칠 수 있습니다.",
+    "e": "정답: 0\n상향식 접근방법은 현장 맞춤형 분석에 강점이 있으나, 전체 국정 목표나 법률 본래의 정책 의도(legal intention)를 소홀히 다룰 위험이 있습니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책 평가(Policy Evaluation)의 개념에 관한 설명으로 옳은 것은? [워크북 p.80]",
+    "o": [
+      "사회복지정책 활동의 각종 정보를 수집·분석하여 그 가치를 판단하는 절차",
+      "정책 대안 중 최적의 대안만을 하나 골라 국회에서 의결하는 행위",
+      "일선 집행자에게 예산을 배분하고 조직 구조를 짜는 사업",
+      "이해당사자 간의 정치적 타협을 도출하기 위한 비공개 협상 과정"
+    ],
+    "a": 0,
+    "h": "정책 활동의 수단, 과정, 결과에 대해 체계적으로 가치와 효과성을 판단합니다.",
+    "e": "정답: 0\n사회복지정책 평가는 정책 과정 전반 및 집행 결과의 정보 수집·분석을 통해 목표 달성도와 사업의 가치를 객관적으로 평가·판단하는 절차입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "정책 평가의 목적으로 적절하지 않은 것은? [워크북 p.80]",
+    "o": [
+      "정책 목표의 달성 여부 및 효과성 확인",
+      "정책 활동에 대한 사회적 책임성(accountability) 확보",
+      "평가 결과를 통한 향후 정책 환류 및 개선",
+      "평가 결과를 왜곡하여 특정 관료의 사적 이익 합리화"
+    ],
+    "a": 3,
+    "h": "평가는 공익과 책무성, 정책 개선을 위한 순기능을 목적으로 해야 합니다.",
+    "e": "정답: 3\n정책 평가는 목표 달성 검증, 책임성 확보, 자원 정당화, 정책 환류 및 학습을 목적으로 시행되며, 사적 이익 합리화는 부작용이자 평가 왜곡 행위입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "정책 평가의 유형 중 '총괄평가(Summative Evaluation)'의 주요 특징은? [워크북 p.81]",
+    "o": [
+      "정책 집행이 종료된 후 정책이 가져온 최종 성과와 영향을 종합 평가한다.",
+      "정책 수행 초기나 도중에 사업을 수정·보완하기 위해 모니터링한다.",
+      "평가 기법의 통계적 타향성만을 사전에 검증하는 평가이다.",
+      "집행 절차상의 단순 서류 미비만을 점검하는 형성 평가이다."
+    ],
+    "a": 0,
+    "h": "사업 완결 후 목표 달성 및 정책 영향(impact)의 최종 수확을 평가합니다.",
+    "e": "정답: 0\n총괄평가는 정책 프로그램이 완전히 집행된 후 의도한 목적이 달성되었는지 최종적 영향과 성과를 종합 판단하는 평가입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "정책 평가의 유형 중 '형성평가(Formative Evaluation)'의 주요 목적은? [워크북 p.81]",
+    "o": [
+      "사업 진행 도중 문제를 파악하여 정책 프로그램을 수정·보완하고 개선하기 위함",
+      "정책이 완전히 끝난 후 최종 비용-편익 비율을 확정하기 위함",
+      "타 정부 기관의 유사 사업을 메타 분석하기 위함",
+      "국민의 투표율에 미치는 영향을 측정하기 위함"
+    ],
+    "a": 0,
+    "h": "집행 도중에 피드백을 제공하여 사업의 운영 효율성을 높입니다.",
+    "e": "정답: 0\n형성평가(과정평가 성격 포함)는 사업 초기 또는 진행 도중에 문제점을 진단하고 개선책을 마련하여 프로그램의 완성도를 높이는 데 목적이 있습니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "정책 평가의 주체에 따른 분류 중 독립적인 학자나 전문 연구기관이 시행하는 평가 유형은? [워크북 p.81]",
+    "o": [
+      "외부평가(External Evaluation)",
+      "내부평가(Internal Evaluation)",
+      "자체평가",
+      "형성평가"
+    ],
+    "a": 0,
+    "h": "집행 기관 밖의 제3자가 평가하여 객관성과 신뢰성을 확보합니다.",
+    "e": "정답: 0\n외부평가는 정책 집행 조직과 이해관계가 없는 외부 전문가나 객관적 연구기관이 실시하여 정당성과 신뢰도를 높이는 평가 형태입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "기존의 여러 정책 평가 연구 결과들을 종합하여 평가 자체의 타당성을 재평가하는 것은? [워크북 p.81]",
+    "o": [
+      "메타평가(Meta-evaluation)",
+      "총괄평가",
+      "산출평가",
+      "사례연구"
+    ],
+    "a": 0,
+    "h": "'평가에 대한 평가'로서 여러 개별 평가 결과를 체계적으로 분석·합성합니다.",
+    "e": "정답: 0\n메타평가(조망적 평가 종합)는 시행된 수많은 평가 연구 자료들을 수집·통합하여 평가의 정확성과 타당성을 다시 평가하는 상위 수준의 평가 기법입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "정책 평가의 실험적 설계 중 무작위 배정(random allocation)을 통해 통제집단과 실험집단의 동질성을 확보하는 설계는? [워크북 p.81]",
+    "o": [
+      "진실험 설계(True Experimental Design)",
+      "준실험 설계(Quasi-experimental Design)",
+      "비실험적 설계",
+      "사례연구"
+    ],
+    "a": 0,
+    "h": "자연과학적 실험처럼 무작위화를 통해 완벽한 무차별 대조군을 형성합니다.",
+    "e": "정답: 0\n진실험 설계는 무작위 배정으로 외생변수를 차단하고 인과관계를 엄격히 검증할 수 있는 가장 정밀한 실험적 평가 설계입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "무작위 배정이 불가능한 현장 상황에서 '비동질적 통제집단'을 비교집단으로 설정하여 효과를 측정하는 평가는? [워크북 p.81, 2018년 기말 기출]",
+    "o": [
+      "준실험 설계(Quasi-experimental Design)",
+      "진실험 설계",
+      "사례연구",
+      "메타평가"
+    ],
+    "a": 0,
+    "h": "현실적 제약으로 완벽한 무작위화 대신 유사 집단을 비교 대상으로 활용합니다.",
+    "e": "정답: 0\n준실험 설계는 무작위 배정이 비윤리적이거나 불가능할 때 비동질적 비교집단을 구성하여 정책 처치의 효과를 비교하는 실용적 실험 방법입니다."
+  },
+  {
+    "type": "비교·분석",
+    "q": "통제집단을 구성하지 못하고 통계적 기법(회귀분석 등)으로 허위적 관계를 제거하여 인과관계를 검증하는 평가 설계는? [워크북 p.81, 2018년 기말 기출]",
+    "o": [
+      "비실험적 설계(Non-experimental Design)",
+      "진실험 설계",
+      "준실험 설계",
+      "시범실험"
+    ],
+    "a": 0,
+    "h": "실험 통제 없이 수집된 단일 집단 데이터를 통계적으로 통제·검증합니다.",
+    "e": "정답: 0\n비실험적 설계는 실험집단과 통제집단을 사전에 구분하지 못할 때 사후에 통계적 제어 기법을 동원하여 정책 효과를 입증하려는 방식입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "평가 타당성 중 '측정 도구가 평가하고자 하는 이론적 개념을 제대로 조작화했는가'에 관한 타당성은? [워크북 p.82, 2019년 기말 기출]",
+    "o": [
+      "구성 타당성(Construct Validity)",
+      "내적 타당성(Internal Validity)",
+      "외적 타당성(External Validity)",
+      "통계적 결론 타당성"
+    ],
+    "a": 0,
+    "h": "추상적 복지 개념이 적절한 측정 지표로 잘 조작적으로 정의되었는지에 대한 척도입니다.",
+    "e": "정답: 0\n구성 타당성은 평가 대상인 추상적 정책 개념(예: 삶의 질, 빈곤 탈출)이 실제 측정한 조작적 지표와 얼마나 일치하는가를 평가합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "관찰된 결과 변화가 순수하게 평가 대상 정책(처치) 때문에 일어났음을 입증하는 인과관계의 정확성은? [워크북 p.82, 2015년, 2017년 기말 기출]",
+    "o": [
+      "내적 타당성(Internal Validity)",
+      "구성 타당성",
+      "외적 타당성",
+      "내용 타당성"
+    ],
+    "a": 0,
+    "h": "제3의 변수(외생변수)의 개입 없이 순수한 정책 효과임을 입증하는 인과성입니다.",
+    "e": "정답: 0\n내적 타당성은 정책 개입과 결과 변화 사이의 인과관계 추론이 얼마나 정확하고 제3의 허위 요인이 배제되었는가를 의미합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "특정 지역이나 표본 집단에서 얻은 평가 결과를 다른 지역이나 일반 국민 전체로 '일반화'할 수 있는 정도는? [워크북 p.82]",
+    "o": [
+      "외적 타당성(External Validity)",
+      "내적 타당성",
+      "구성 타당성",
+      "표본 타당성"
+    ],
+    "a": 0,
+    "h": "평가 결과를 타 상황이나 일반 대중에게 확대 적용할 수 있는 대표성입니다.",
+    "e": "정답: 0\n외적 타당성은 특정 시범 사업 평가 결과의 추론을 다른 일반적 환경, 대상, 시점으로 일반화(generalization)할 수 있는 범주를 뜻합니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "평가 타당성을 저해하는 '경쟁적 설명 요인(Competitive Explanations)'에 해당하지 않는 것은? [워크북 p.82, 2013년 기말 기출]",
+    "o": [
+      "역사적 사건(History) 및 성숙 효과(Maturation)",
+      "선발 편견(Selection Bias) 및 측정 도구의 변화",
+      "피험자의 상실(Mortality)",
+      "완벽한 무작위 배정(Random Assignment)"
+    ],
+    "a": 3,
+    "h": "무작위 배정은 저해요인이 아니라 저해요인을 없애주는 최고의 제어 도구입니다.",
+    "e": "정답: 3\n무작위 배정은 내적 타당성 저해요인을 제거해 주는 제어 방법입니다. 역사, 성숙, 선발 바이오스, 탈락 등은 평가 결과를 왜곡하는 경쟁적 설명 요인(외생변수)입니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "집행 과정 모니터링의 핵심 개념 중 '프로그램 대상 집단의 실질적인 참여 정도'를 의미하는 것은? [워크북 p.82, 2019년 기말 기출]",
+    "o": [
+      "커버리지(Coverage)",
+      "바이어스(Bias)",
+      "탈락률",
+      "충족률"
+    ],
+    "a": 0,
+    "h": "애초에 도와주려고 정한 대상자 중 실제 몇 %가 혜택을 받았는가의 참여 비율입니다.",
+    "e": "정답: 0\n커버리지(Coverage)는 대상 표적 집단 중 정책 서비스에 실제 참여한 비율을 뜻하며, 커버리지가 낮으면 사각지대가 잔존함을 뜻합니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "커버리지(Coverage) 상태에 관한 설명으로 올바르지 않은 것은? [워크북 p.82]",
+    "o": [
+      "커버리지가 높을수록 복지 사각지대가 넓어진다.",
+      "낮은 커버리지는 복지 욕구가 미충족된 채 남아있음을 의미한다.",
+      "초과 커버리지는 부적절한 수급자에 대한 서비스 남용을 뜻한다.",
+      "초과 커버리지가 심하면 정책 설계의 수정을 검토해야 한다."
+    ],
+    "a": 0,
+    "h": "커버리지가 높다는 것은 의도한 대상자가 서비스에 잘 참여하고 있다는 뜻입니다.",
+    "e": "정답: 0\n커버리지가 높을수록 복지 욕구가 잘 충족되어 사각지대가 줄어듭니다. 낮은 커버리지가 사각지대 잔존을 의미합니다."
+  },
+  {
+    "type": "사례적용",
+    "q": "맞벌이 부부의 육아 부담을 줄이려고 공공보육시설을 확충했으나, 실제 이용자가 주로 전업주부인 현상은 모니터링 개념 중 무엇에 해당하는가? [워크북 p.82, 2015년 기말 기출]",
+    "o": [
+      "바이어스(Bias)",
+      "낮은 커버리지",
+      "구성 타당성",
+      "외적 타당성"
+    ],
+    "a": 0,
+    "h": "애초 의도한 대상이 아닌 다른 하위 집단이 서비스에 주로 참여하는 경향입니다.",
+    "e": "정답: 0\n바이어스(Bias)는 의도한 원래 대상 집단 외의 다른 집단이나 특정 하위 집단으로 혜택 참여가 쏠려 치우치는 경향성을 의미합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "사회복지정책 평가 결과를 정책 수정이나 예산 배분 등 실제 결정에 직접 반영하는 활용 방식은? [워크북 p.83]",
+    "o": [
+      "도구적 이용(Instrumental Use)",
+      "관념적 이용(Conceptual Use)",
+      "상징적 이용",
+      "정치적 이용"
+    ],
+    "a": 0,
+    "h": "평가 결과를 문제 해결을 위한 지침이나 도구로 직접 집행에 반영하는 형태입니다.",
+    "e": "정답: 0\n도구적 이용은 평가 보고서의 결론과 처방을 실제 정책의 수정, 존폐, 예산 조정의 직접적 도구로 사용하는 방식입니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "정책 평가 결과를 직접 결정에 쓰지는 않더라도, 관료나 대중의 인식 전환과 문제 이해를 넓히는 데 영향을 주는 활용 방식은? [워크북 p.83]",
+    "o": [
+      "관념적 이용(Conceptual Use)",
+      "도구적 이용",
+      "즉각적 이용",
+      "제도적 이용"
+    ],
+    "a": 0,
+    "h": "새로운 시각이나 이념을 학습하게 하여 장기적 인식 변용을 가져오는 방식입니다.",
+    "e": "정답: 0\n관념적(개념적) 이용은 당장의 정책 개정으로 연결되지는 않더라도 정책 문제를 바라보는 시각과 관념을 변화시키는 계기를 제공하는 활용 형태입니다."
+  },
+  {
+    "type": "내용이해",
+    "q": "사회복지정책 평가 결과의 활용을 저해하는 요인으로 보기 어려운 것은? [워크북 p.83]",
+    "o": [
+      "평가 결과가 이해관계자나 이용자의 정서적 저항에 부딪힐 때",
+      "평가 결과가 정치적 이익을 위한 선택적 악용 수단으로 전락할 때",
+      "평가 보고서가 현장 실정을 무시한 채 지나치게 학술적·난해할 때",
+      "평가자의 중립적 객관성이 완벽히 확보되고 결과가 즉시 제출될 때"
+    ],
+    "a": 3,
+    "h": "평가자의 중립성과 적시 제출은 활용도를 높여주는 긍정적 요인입니다.",
+    "e": "정답: 3\n평가자의 객관성 확보, 명확성, 시의적절한 제출은 평가 활용도를 향상시키는 요인입니다. 이해관계자의 저항, 악용, 난해성은 활용 저해 요인입니다."
+  },
+  {
+    "type": "사례적용",
+    "q": "무상보육정책 평가에서 보육을 '개인과 가족의 책임'으로 보는 관점이 강조할 비판적 평가는? [워크북 p.84]",
+    "o": [
+      "무분별한 무상복지로 시설 이용 남용과 예산 낭비가 초래되었다고 본다.",
+      "국가의 보편적 사회권 보장이 완성되어 저출산이 극복되었다고 본다.",
+      "전업주부의 보육시설 이용은 당연한 보편적 권리라고 평가한다.",
+      "복지 전달체계의 민간 위탁이 완벽히 성공했다고 평가한다."
+    ],
+    "a": 0,
+    "h": "선별주의와 자조 원칙을 강조하는 입장에서 무상복지의 부작용을 비판합니다.",
+    "e": "정답: 0\n보육을 개인 책임으로 보는 잔여적·선별적 관점에서는 무상보육이 부모의 양육 책임을 약화시키고 불필요한 시설 이용(바이어스)과 예산 낭비를 유발했다고 비판적으로 평가합니다."
+  },
+  {
+    "type": "사례적용",
+    "q": "무상보육정책 평가에서 '보편적 복지국가의 의무'를 강조하는 관점의 해석으로 옳은 것은? [워크북 p.84]",
+    "o": [
+      "전업주부의 시설 이용은 제도 정착 과정의 부분적 행정 문제일 뿐 보편 지원이 타당하다.",
+      "만 0~5세 전체 무상보육을 당장 철회하고 저소득층만 지원해야 한다.",
+      "보육 시설 지원을 전면 중단하고 현금 수당만 지급해야 한다.",
+      "모든 보육시설을 국가 직영으로 전환해야 집행이 성립한다."
+    ],
+    "a": 0,
+    "h": "모든 미취학 아동에 대한 국가의 보편적 양육 지원 원칙을 옹호합니다.",
+    "e": "정답: 0\n보편주의적 관점에서는 전업주부의 시설 이용 등 일부 부작용은 집행상의 지엽적 문제일 뿐, 미취학 아동 전체에 대한 국가의 양육 및 서비스 보장이라는 보편적 방향이 옳다고 평가합니다."
+  },
+  {
+    "type": "개념확인",
+    "q": "다음 거시적 정책결정모형과 핵심 주장이 잘못 연결된 것은? [워크북 p.78]",
+    "o": [
+      "엘리트 이론 - 소수 권력층의 지배적 가치가 정책에 반영된다.",
+      "체계 이론 - 정치체계는 환류(feedback)를 통해 환경 변화에 적응한다.",
+      "공공선택 이론 - 사리사욕이 없는 완벽한 성인(聖人)으로서 관료를 전제한다.",
+      "신제도 이론 - 제도와 인간의 선택 간 상호작용을 중시한다."
+    ],
+    "a": 2,
+    "h": "공공선택 이론은 정치인과 관료도 자기 이익을 챙기는 경제인으로 봅니다.",
+    "e": "정답: 2\n공공선택 이론은 정치인이나 공무원도 이타적인 성인이 아니라, 자신의 권한·예산·승진 등 자기 이익을 극대화하려는 합리적 이기주의자로 전제하고 분석합니다."
+        }
+    ];</script>
+
+<!-- ④ 프로그램 본체: 수정하지 마세요. -->
+<script>
+    var allQuestions = [];   // 검사를 통과한 전체 문제
+    var questions = [];      // 지금 풀고 있는 문제 묶음(전체 또는 틀린 문제)
+    var curIdx = 0;
+    var wrongCount = 0;      // 현재 문제에서 틀린 횟수
+    var correctFirst = 0;    // 이번 회차에서 한 번에 맞힌 문제 수
+    var missed = [];         // 이번 회차에서 한 번이라도 틀린 문제
+
+    document.title = '사회복지정책론 퀴즈 [제' + LECTURE.no + '장]';
+    document.getElementById('lecture-title').textContent = '제' + LECTURE.no + '장: ' + LECTURE.title;
+
+    /* ---------- 데이터 검사 ---------- */
+    function validateQuizData(data) {
+        var errors = [];
+        var warnings = [];
+        var valid = [];
+
+        if (!Array.isArray(data) || data.length === 0) {
+            errors.push({ tag: '전체', text: 'quizData가 비어 있거나 배열([ ])이 아닙니다.' });
+            return { errors: errors, warnings: warnings, valid: valid };
+        }
+
+        data.forEach(function (item, i) {
+            var tag = 'Q' + (i + 1);
+            var problems = [];
+
+            if (!item || typeof item !== 'object') {
+                problems.push('문제가 { } 형식이 아닙니다.');
+            } else {
+                if (typeof item.q !== 'string' || !item.q.trim()) {
+                    problems.push('q(질문)가 없거나 비어 있습니다.');
+                }
+
+                var oOk = Array.isArray(item.o);
+                if (!oOk) {
+                    problems.push('o(보기)가 배열([ ])이 아닙니다.');
+                } else {
+                    if (item.o.length < 2) {
+                        problems.push('보기가 ' + item.o.length + '개뿐입니다. 2개 이상 필요합니다.');
+                    }
+                    var bad = item.o.some(function (x) { return typeof x !== 'string' || !x.trim(); });
+                    if (bad) {
+                        problems.push('보기 중에 비어 있거나 글자가 아닌 항목이 있습니다.');
+                    } else {
+                        var uniq = {};
+                        item.o.forEach(function (x) { uniq[x.trim()] = true; });
+                        if (Object.keys(uniq).length !== item.o.length) {
+                            problems.push('똑같은 보기가 2개 이상 있습니다.');
+                        }
+                    }
+                }
+
+                if (typeof item.a === 'string') {
+                    problems.push('a(정답 번호)가 따옴표로 감싸져 있습니다("' + item.a + '"). 따옴표 없는 숫자로 바꾸세요.');
+                } else if (!Number.isInteger(item.a)) {
+                    problems.push('a(정답 번호)가 없거나 숫자가 아닙니다.');
+                } else if (oOk && (item.a < 0 || item.a >= item.o.length)) {
+                    if (item.a === item.o.length) {
+                        problems.push('a가 ' + item.a + '입니다. 번호는 0부터 세므로 보기가 ' + item.o.length + '개면 0~' + (item.o.length - 1) + ' 중 하나여야 합니다. 1부터 센 것 같아요(' + item.a + ' → ' + (item.a - 1) + ').');
+                    } else {
+                        problems.push('a가 ' + item.a + '로 보기 범위(0~' + (item.o.length - 1) + ')를 벗어났습니다.');
+                    }
+                }
+
+                if (typeof item.h !== 'string' || !item.h.trim()) {
+                    problems.push('h(힌트)가 없거나 비어 있습니다.');
+                }
+                if (typeof item.e !== 'string' || !item.e.trim()) {
+                    problems.push('e(해설)가 없거나 비어 있습니다.');
+                }
+            }
+
+            if (problems.length) {
+                problems.forEach(function (t) { errors.push({ tag: tag, text: t }); });
+            } else {
+                valid.push(item);
+            }
+        });
+
+        
+
+        return { errors: errors, warnings: warnings, valid: valid };
+    }
+
+    /* ---------- 검사 결과 화면 ---------- */
+    function showProblemScreen(opts) {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('problem-screen').style.display = 'block';
+        document.getElementById('problem-title').textContent = opts.title;
+        document.getElementById('problem-summary').textContent = opts.summary;
+
+        var list = document.getElementById('problem-list');
+        list.innerHTML = '';
+        opts.items.forEach(function (it) {
+            var li = document.createElement('li');
+            if (it.warn) li.className = 'warn';
+            var tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = it.tag;
+            var txt = document.createElement('span');
+            txt.textContent = it.text;
+            li.appendChild(tag);
+            li.appendChild(txt);
+            list.appendChild(li);
+        });
+
+        var tips = document.getElementById('problem-tips');
+        tips.innerHTML = '';
+        if (opts.tips && opts.tips.length) {
+            tips.appendChild(document.createTextNode('자주 생기는 원인'));
+            var ul = document.createElement('ul');
+            opts.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                ul.appendChild(li);
+            });
+            tips.appendChild(ul);
+            tips.style.display = 'block';
+        } else {
+            tips.style.display = 'none';
+        }
+
+        var btn = document.getElementById('partial-btn');
+        if (opts.buttonText) {
+            btn.textContent = opts.buttonText;
+            btn.style.display = 'block';
+            btn.onclick = opts.onButton;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function startQuiz(list) {
+        allQuestions = list;
+        document.getElementById('problem-screen').style.display = 'none';
+        beginRound(list);
+    }
+
+    // 한 회차 시작: 전체 문제 또는 틀린 문제만 받아서 처음부터 진행
+    function beginRound(list) {
+        questions = list;
+        curIdx = 0;
+        correctFirst = 0;
+        missed = [];
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        loadQuestion();
+    }
+
+    function init() {
+        // 데이터 문법 오류: ③ 블록이 아예 실행되지 못한 경우
+        if (typeof quizData === 'undefined') {
+            var items = window.__dataErrors.map(function (er) {
+                return { tag: er.line ? ('약 ' + er.line + '줄') : '오류', text: er.msg };
+            });
+            if (!items.length) items.push({ tag: '오류', text: 'quizData를 찾을 수 없습니다. const quizData = [ ... ]; 형태가 맞는지 확인하세요.' });
+            showProblemScreen({
+                title: '⚠️ 퀴즈 데이터를 읽지 못했어요',
+                summary: '데이터 부분에 문법 오류가 있어서 프로그램이 멈췄습니다. 아래 줄 근처를 확인하세요.',
+                items: items,
+                tips: [
+                    '문장 안에 큰따옴표(")가 들어 있음 → 작은따옴표(\')로 바꾸기',
+                    '문제와 문제 사이 쉼표(,) 빠짐, 또는 맨 끝의 ]; 가 지워짐',
+                    '문장 한가운데에서 줄이 바뀜 (한 문장은 한 줄로)',
+                    '붙여넣은 글에 // 가 포함되어 뒷부분이 주석 처리됨'
+                ]
+            });
+            return;
+        }
+
+        var result = validateQuizData(quizData);
+
+        if (result.errors.length === 0 && result.warnings.length === 0) {
+            startQuiz(result.valid);
+            return;
+        }
+
+        var items = result.errors.map(function (er) { return { tag: er.tag, text: er.text }; })
+            .concat(result.warnings.map(function (w) { return { tag: w.tag, text: w.text, warn: true }; }));
+
+        var badCount = (Array.isArray(quizData) ? quizData.length : 0) - result.valid.length;
+        var hasErrors = result.errors.length > 0;
+
+        showProblemScreen({
+            title: hasErrors ? '⚠️ 고칠 곳이 ' + result.errors.length + '군데 있어요' : '확인해 볼 곳이 있어요',
+            summary: !hasErrors
+                ? '오류는 아니지만 한 번 확인해 보세요.'
+                : (badCount > 0
+                    ? '전체 ' + quizData.length + '문제 중 ' + badCount + '문제에 문제가 있습니다. 데이터를 고치고 새로고침하세요.'
+                    : '퀴즈 데이터를 확인하고 새로고침하세요.'),
+            items: items,
+            tips: hasErrors ? [
+                '정답 번호 a는 따옴표 없는 숫자이고, 첫 번째 보기가 0입니다',
+                '문제마다 type, q, o, a, h, e 가 모두 있어야 합니다'
+            ] : null,
+            buttonText: result.valid.length > 0
+                ? (hasErrors ? '오류 없는 ' + result.valid.length + '문제만 먼저 풀기' : '그대로 시작하기')
+                : null,
+            onButton: function () { startQuiz(result.valid); }
+        });
+    }
+
+    /* ---------- 퀴즈 진행 ---------- */
+    function loadQuestion() {
+        wrongCount = 0;
+        var q = questions[curIdx];
+
+        document.getElementById('progress-text').textContent = (curIdx + 1) + ' / ' + questions.length;
+        updateScore();
+        window.scrollTo(0, 0);
+        document.getElementById('question-type').textContent = q.type || '일반문제';
+        document.getElementById('question-text').textContent = 'Q' + (allQuestions.indexOf(q) + 1) + '. ' + q.q;
+
+        var container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.o.forEach(function (opt, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = function () { checkAnswer(idx, btn); };
+            container.appendChild(btn);
+        });
+
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('exp-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(idx, btn) {
+        var q = questions[curIdx];
+        var allBtns = document.querySelectorAll('.option-btn');
+
+        if (idx === q.a) {
+            btn.classList.add('correct');
+            allBtns.forEach(function (b) { b.style.pointerEvents = 'none'; });
+            if (wrongCount === 0) { correctFirst++; updateScore(); }
+            showExplanation();
+        } else {
+            wrongCount++;
+            if (wrongCount === 1) missed.push(q);
+            btn.classList.add('wrong');
+            btn.style.pointerEvents = 'none';
+
+            if (wrongCount === 1) {
+                document.getElementById('hint-text').textContent = q.h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else {
+                allBtns[q.a].classList.add('correct');
+                allBtns.forEach(function (b) { b.style.pointerEvents = 'none'; });
+                showExplanation();
+            }
+        }
+    }
+
+    function showExplanation() {
+        var q = questions[curIdx];
+        document.getElementById('exp-text').textContent = q.e;
+        document.getElementById('exp-box').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    // 풀던 중에 누르면 한 번 물어봅니다. (묻지 않으려면 if 문 세 줄을 지우세요)
+    function goList() {
+        if (curIdx > 0 && !confirm('퀴즈를 그만하고 목록으로 갈까요?\n지금까지 푼 기록은 저장되지 않아요.')) return;
+        location.href = 'index.html';
+    }
+
+    function nextQuestion() {
+        curIdx++;
+        if (curIdx < questions.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    /* ---------- 점수와 다시 풀기 ---------- */
+    // 한 번에 맞힌 문제만 점수로 셉니다. (힌트를 본 뒤 맞히면 점수에 넣지 않아요)
+    function updateScore() {
+        document.getElementById('score-text').textContent = '한 번에 맞힌 문제 ' + correctFirst + '개';
+    }
+
+    function showResult() {
+        var total = questions.length;
+        var score = Math.round(correctFirst / total * 100);
+        var isRetry = total < allQuestions.length;
+
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+
+        document.getElementById('result-title').textContent = isRetry ? '🔁 틀린 문제 복습을 마쳤습니다!' : '🎊 학습을 마쳤습니다!';
+        document.getElementById('result-score').textContent = score + '점';
+        document.getElementById('result-detail').textContent =
+            (isRetry ? '복습한 ' : '전체 ') + total + '문제 중 한 번에 맞힌 문제 ' + correctFirst + '개 (100점 만점)';
+
+        var msg;
+        if (score >= 90) msg = '진짜 수고 많이 하셨습니다, 학우님! A+ 당근 🥕';
+        else if (score >= 70) msg = '잘하고 계세요! 틀린 문제만 한 번 더 풀면 더 단단해져요.';
+        else msg = '괜찮아요. 틀린 문제를 해설과 함께 다시 풀어 보면 금방 늘어요.';
+        document.getElementById('result-msg').textContent = msg;
+
+        var details = document.getElementById('missed-details');
+        var list = document.getElementById('missed-list');
+        list.innerHTML = '';
+        missed.forEach(function (m) {
+            var li = document.createElement('li');
+            li.value = allQuestions.indexOf(m) + 1;
+            li.textContent = m.q;
+            list.appendChild(li);
+        });
+        details.open = false;
+        details.style.display = missed.length ? 'block' : 'none';
+        document.getElementById('missed-summary').textContent = '이번에 틀린 문제 ' + missed.length + '개 보기';
+
+        var retryBtn = document.getElementById('retry-missed-btn');
+        retryBtn.textContent = '❌ 틀린 문제만 다시 풀기 (' + missed.length + '문제)';
+        retryBtn.style.display = missed.length ? 'block' : 'none';
+
+        window.scrollTo(0, 0);
+    }
+
+    function retryAll() { beginRound(allQuestions); }
+    function retryMissed() { if (missed.length) beginRound(missed.slice()); }
+
+    init();
+</script>
+</body>
+</html>
